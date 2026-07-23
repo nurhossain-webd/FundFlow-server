@@ -13,6 +13,7 @@ const environmentSchema = z.object({
       "MONGODB_URI must be a valid MongoDB connection URI",
     ),
   CLIENT_URL: z.url("CLIENT_URL must be a valid URL"),
+  BETTER_AUTH_URL: z.url("BETTER_AUTH_URL must be a valid URL"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(100),
 });
