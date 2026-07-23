@@ -20,7 +20,10 @@ interface PlatformStatistics {
 }
 
 export const getTopFundedCampaigns = async (): Promise<TopCampaign[]> => {
-  const campaigns = await CampaignModel.find({ status: "approved" })
+  const campaigns = await CampaignModel.find({
+    status: "approved",
+    deadline: { $gt: new Date() },
+  })
     .select("title category imageURL amountRaised fundingGoal deadline")
     .sort({ amountRaised: -1, createdAt: -1 })
     .limit(6)
