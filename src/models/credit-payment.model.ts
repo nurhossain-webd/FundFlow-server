@@ -1,0 +1,142 @@
+import mongoose, { type Model } from "mongoose";
+
+import {
+  EMAIL_PATTERN,
+  isPositiveSafeInteger,
+} from "./model.utils.js";
+
+const { model, models, Schema } = mongoose;
+
+export const CREDIT_PAYMENT_STATUSES = [
+  "created",
+  "pending",
+  "completed",
+  "failed",
+  "refunded",
+] as const;
+
+export type CreditPaymentStatus = (typeof CREDIT_PAYMENT_STATUSES)[number];
+
+export interface ICreditPayment {
+  supporterId: mongoose.Types.ObjectId;
+  supporterAuthUserId: string;
+  supporterEmail: string;
+  creditsPurchased: number;
+  amountInCents: number;
+  currency: string;
+  status: CreditPaymentStatus;
+  idempotencyKey: string;
+  stripeCheckoutSessionId?: string;
+  stripePaymentIntentId?: string;
+  completedAt?: Date;
+  failureReason?: string;
+  refundedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const creditPaymentSchema = new Schema<ICreditPayment>(
+  {
+    supporterId: {
+      type: Schema.Types.ObjectId,
+      ref: "UserProfile",
+      required: true,
+      immutable: true,
+    },
+    supporterAuthUserId: {
+      type: String,
+      required: true,
+      trim: true,
+      immutable: true,
+    },
+    supporterEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      match: EMAIL_PATTERN,
+      immutable: true,
+    },
+    creditsPurchased: {
+      type: Number,
+      required: true,
+      immutable: true,
+      validate: {
+        validator: isPositiveSafeInteger,
+        message: "Purchased credits must be a positive safe integer",
+      },
+    },
+    amountInCents: {
+      type: Number,
+      required: true,
+      immutable: true,
+      validate: {
+        validator: isPositiveSafeInteger,
+        message: "Payment amount must be a positive safe integer",
+      },
+    },
+    currency: {
+      type: String,
+      required: true,
+      default: "usd",
+      lowercase: true,
+      trim: true,
+      minlength: 3,
+      maxlength: 3,
+      immutable: true,
+    },
+    status: {
+      type: String,
+      enum: CREDIT_PAYMENT_STATUSES,
+      required: true,
+      default: "created",
+    },
+    idempotencyKey: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+      immutable: true,
+    },
+    stripeCheckoutSessionId: {
+      type: String,
+      trim: true,
+      immutable: true,
+    },
+    stripePaymentIntentId: {
+      type: String,
+      trim: true,
+      immutable: true,
+    },
+    completedAt: Date,
+    failureReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    refundedAt: Date,
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  },
+);
+
+creditPaymentSchema.index(
+  { supporterId: 1, idempotencyKey: 1 },
+  { unique: true },
+);
+creditPaymentSchema.index(
+  { stripeCheckoutSessionId: 1 },
+  { unique: true, sparse: true },
+);
+creditPaymentSchema.index(
+  { stripePaymentIntentId: 1 },
+  { unique: true, sparse: true },
+);
+creditPaymentSchema.index({ supporterEmail: 1, createdAt: -1 });
+creditPaymentSchema.index({ status: 1, createdAt: -1 });
+
+export const CreditPaymentModel =
+  (models.CreditPayment as Model<ICreditPayment> | undefined) ??
+  model<ICreditPayment>("CreditPayment", creditPaymentSchema);
