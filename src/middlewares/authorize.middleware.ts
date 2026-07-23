@@ -3,11 +3,16 @@ import type { RequestHandler } from "express";
 import type { UserRole } from "../models/user-profile.model.js";
 import { AppError } from "../utils/app-error.js";
 
-export const authorizeRoles =
+export const allowRoles =
   (...allowedRoles: readonly UserRole[]): RequestHandler =>
   (request, _response, next) => {
     if (!request.user) {
       next(new AppError(401, "Authentication required"));
+      return;
+    }
+
+    if (request.user.isSuspended) {
+      next(new AppError(403, "Account is suspended"));
       return;
     }
 
@@ -18,3 +23,9 @@ export const authorizeRoles =
 
     next();
   };
+
+export const requireSupporter = allowRoles("supporter");
+export const requireCreator = allowRoles("creator");
+export const requireAdmin = allowRoles("admin");
+
+export const authorizeRoles = allowRoles;
