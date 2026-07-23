@@ -4,7 +4,14 @@ import { z } from "zod";
 const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65_535).default(5000),
-  MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
+  MONGODB_URI: z
+    .string()
+    .min(1, "MONGODB_URI is required")
+    .refine(
+      (value) =>
+        value.startsWith("mongodb://") || value.startsWith("mongodb+srv://"),
+      "MONGODB_URI must be a valid MongoDB connection URI",
+    ),
   CLIENT_URL: z.url("CLIENT_URL must be a valid URL"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(100),

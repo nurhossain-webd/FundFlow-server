@@ -3,12 +3,24 @@ import mongoose from "mongoose";
 import { env } from "./env.js";
 
 export const connectToDatabase = async (): Promise<void> => {
-  await mongoose.connect(env.MONGODB_URI);
-  console.info("Connected to MongoDB");
+  try {
+    await mongoose.connect(env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10_000,
+    });
+    console.info("MongoDB connected");
+  } catch {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect().catch(() => undefined);
+    }
+
+    throw new Error("Unable to connect to MongoDB");
+  }
 };
 
 export const disconnectFromDatabase = async (): Promise<void> => {
-  await mongoose.disconnect();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
 };
 
 export const getDatabaseStatus = (): string => {

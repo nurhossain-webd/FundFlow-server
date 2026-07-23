@@ -13,7 +13,9 @@ export const getHealth = (_request: Request, response: Response): void => {
       service: "fundflow-api",
       status: isHealthy ? "healthy" : "degraded",
       environment: env.NODE_ENV,
-      database: databaseStatus,
+      database: {
+        status: databaseStatus,
+      },
       uptimeSeconds: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
     },

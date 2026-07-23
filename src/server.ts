@@ -32,22 +32,31 @@ const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
   }, 10_000);
   forceExitTimer.unref();
 
-  if (httpServer) {
-    await new Promise<void>((resolve, reject) => {
-      httpServer?.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+  try {
+    if (httpServer) {
+      await new Promise<void>((resolve, reject) => {
+        httpServer?.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
 
-        resolve();
+          resolve();
+        });
       });
-    });
-  }
 
-  await disconnectFromDatabase();
-  clearTimeout(forceExitTimer);
-  process.exit(0);
+      httpServer = undefined;
+    }
+
+    await disconnectFromDatabase();
+    clearTimeout(forceExitTimer);
+    console.info("FundFlow API stopped");
+    process.exit(0);
+  } catch {
+    clearTimeout(forceExitTimer);
+    console.error("Failed to complete graceful shutdown");
+    process.exit(1);
+  }
 };
 
 process.on("SIGINT", () => {
@@ -58,7 +67,7 @@ process.on("SIGTERM", () => {
   void shutdown("SIGTERM");
 });
 
-startServer().catch((error: unknown) => {
-  console.error("Failed to start FundFlow API", error);
+startServer().catch(() => {
+  console.error("FundFlow API failed to start: database connection unavailable");
   process.exit(1);
 });

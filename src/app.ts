@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 app.use(apiRateLimiter);
 
-app.use(router);
+app.use("/api/v1", router);
 
 app.use(notFound);
 app.use(errorHandler);
