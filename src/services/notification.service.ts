@@ -8,6 +8,7 @@ import {
 import type { NotificationListQuery } from "../schemas/notification.schema.js";
 import type { RequestUser } from "../types/auth-user.js";
 import { AppError } from "../utils/app-error.js";
+import { isSafeInternalPath } from "../utils/internal-path.js";
 
 export interface CreateNotificationInput {
   recipientId: mongoose.Types.ObjectId;
@@ -25,6 +26,9 @@ export const createNotification = async (
   input: CreateNotificationInput,
   session?: ClientSession,
 ) => {
+  if (input.actionRoute && !isSafeInternalPath(input.actionRoute)) {
+    throw new AppError(500, "Notification action route is invalid");
+  }
   const notification = new NotificationModel({
     recipientId: input.recipientId,
     recipientAuthUserId: input.recipientAuthUserId,
@@ -53,27 +57,32 @@ export const createNotifications = async (
     return [];
   }
 
-  const documents = inputs.map((input) => ({
-      recipientId: input.recipientId,
-      recipientAuthUserId: input.recipientAuthUserId,
-      toEmail: input.toEmail,
-      type: input.type,
-      title: input.title,
-      message: input.message,
-      ...(input.actionRoute ? { actionPath: input.actionRoute } : {}),
-      ...(input.relatedEntityType
-        ? { relatedEntityType: input.relatedEntityType }
-        : {}),
-      ...(input.relatedEntityId
-        ? { relatedEntityId: input.relatedEntityId }
-        : {}),
-      isRead: false,
-    }));
+  if (
+    inputs.some(
+      (input) => input.actionRoute && !isSafeInternalPath(input.actionRoute),
+    )
+  ) {
+    throw new AppError(500, "Notification action route is invalid");
+  }
 
-  return NotificationModel.insertMany(
-    documents,
-    session ? { session } : {},
-  );
+  const documents = inputs.map((input) => ({
+    recipientId: input.recipientId,
+    recipientAuthUserId: input.recipientAuthUserId,
+    toEmail: input.toEmail,
+    type: input.type,
+    title: input.title,
+    message: input.message,
+    ...(input.actionRoute ? { actionPath: input.actionRoute } : {}),
+    ...(input.relatedEntityType
+      ? { relatedEntityType: input.relatedEntityType }
+      : {}),
+    ...(input.relatedEntityId
+      ? { relatedEntityId: input.relatedEntityId }
+      : {}),
+    isRead: false,
+  }));
+
+  return NotificationModel.insertMany(documents, session ? { session } : {});
 };
 
 const getOwnerFilter = (user: RequestUser) => ({

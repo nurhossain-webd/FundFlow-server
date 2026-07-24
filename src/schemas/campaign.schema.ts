@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 const objectIdPattern = /^[a-f\d]{24}$/i;
+const httpURLSchema = z
+  .url("Campaign image must be a valid URL")
+  .refine((value) => ["http:", "https:"].includes(new URL(value).protocol), {
+    message: "Campaign image must use HTTP or HTTPS",
+  });
 
 export const campaignIdParamsSchema = z
   .object({
@@ -18,7 +23,7 @@ const campaignFields = {
   minimumContribution: z.number().int().positive().safe(),
   deadline: z.coerce.date(),
   rewardInfo: z.string().trim().min(5).max(2_000),
-  imageURL: z.url("Campaign image must be a valid URL"),
+  imageURL: httpURLSchema,
 } as const;
 
 export const createCampaignSchema = z
@@ -66,9 +71,7 @@ export const campaignListQuerySchema = z
     deadlineBefore: z.coerce.date().optional(),
     fundingGoalMin: z.coerce.number().int().positive().safe().optional(),
     fundingGoalMax: z.coerce.number().int().positive().safe().optional(),
-    status: z
-      .enum(["pending", "approved", "rejected", "suspended"])
-      .optional(),
+    status: z.enum(["pending", "approved", "rejected", "suspended"]).optional(),
     sortBy: z
       .enum([
         "createdAt",

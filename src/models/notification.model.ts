@@ -1,6 +1,7 @@
 import mongoose, { type Model } from "mongoose";
 
 import { EMAIL_PATTERN } from "./model.utils.js";
+import { isSafeInternalPath } from "../utils/internal-path.js";
 
 const { model, models, Schema } = mongoose;
 
@@ -36,8 +37,7 @@ export const NOTIFICATION_ENTITY_TYPES = [
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
-export type NotificationEntityType =
-  (typeof NOTIFICATION_ENTITY_TYPES)[number];
+export type NotificationEntityType = (typeof NOTIFICATION_ENTITY_TYPES)[number];
 
 export interface INotification {
   recipientId: mongoose.Types.ObjectId;
@@ -105,7 +105,7 @@ const notificationSchema = new Schema<INotification>(
       trim: true,
       maxlength: 300,
       validate: {
-        validator: (value: string): boolean => value.startsWith("/"),
+        validator: isSafeInternalPath,
         message: "Notification action path must be an internal path",
       },
     },

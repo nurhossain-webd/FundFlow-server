@@ -26,6 +26,4 @@ export const notificationIdParamsSchema = z
   })
   .strict();
 
-export type NotificationListQuery = z.infer<
-  typeof notificationListQuerySchema
->;
+export type NotificationListQuery = z.infer<typeof notificationListQuerySchema>;

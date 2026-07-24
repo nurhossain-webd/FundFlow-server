@@ -68,6 +68,8 @@ process.on("SIGTERM", () => {
 });
 
 startServer().catch(() => {
-  console.error("FundFlow API failed to start: database connection unavailable");
+  console.error(
+    "FundFlow API failed to start: database connection unavailable",
+  );
   process.exit(1);
 });

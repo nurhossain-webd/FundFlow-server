@@ -43,9 +43,7 @@ export const contributionListQuerySchema = z
   .object({
     page: optionalIntegerQuery(1, 10_000),
     limit: optionalIntegerQuery(12, 50),
-    status: z
-      .enum(["pending", "approved", "rejected", "refunded"])
-      .optional(),
+    status: z.enum(["pending", "approved", "rejected", "refunded"]).optional(),
   })
   .strict();
 
@@ -55,9 +53,5 @@ export const rejectContributionSchema = z
   })
   .strict();
 
-export type CreateContributionInput = z.infer<
-  typeof createContributionSchema
->;
-export type ContributionListQuery = z.infer<
-  typeof contributionListQuerySchema
->;
+export type CreateContributionInput = z.infer<typeof createContributionSchema>;
+export type ContributionListQuery = z.infer<typeof contributionListQuerySchema>;

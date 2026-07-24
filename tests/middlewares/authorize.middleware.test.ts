@@ -52,19 +52,13 @@ describe("role authorization middleware", () => {
   });
 
   it("allows a Supporter through requireSupporter", () => {
-    const result = runMiddleware(
-      requireSupporter,
-      createUser("supporter"),
-    );
+    const result = runMiddleware(requireSupporter, createUser("supporter"));
 
     assert.equal(result, undefined);
   });
 
   it("returns 403 when a Supporter enters a Creator route", () => {
-    const result = runMiddleware(
-      requireCreator,
-      createUser("supporter"),
-    );
+    const result = runMiddleware(requireCreator, createUser("supporter"));
 
     assert.ok(result instanceof AppError);
     assert.equal(result.statusCode, 403);
@@ -78,10 +72,7 @@ describe("role authorization middleware", () => {
   });
 
   it("returns 403 for suspended users even when their role matches", () => {
-    const result = runMiddleware(
-      requireAdmin,
-      createUser("admin", true),
-    );
+    const result = runMiddleware(requireAdmin, createUser("admin", true));
 
     assert.ok(result instanceof AppError);
     assert.equal(result.statusCode, 403);

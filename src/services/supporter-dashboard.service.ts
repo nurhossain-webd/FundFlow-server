@@ -65,11 +65,7 @@ export const getSupporterDashboardStatistics = async (
                 },
                 totalApprovedAmount: {
                   $sum: {
-                    $cond: [
-                      { $eq: ["$status", "approved"] },
-                      "$amount",
-                      0,
-                    ],
+                    $cond: [{ $eq: ["$status", "approved"] }, "$amount", 0],
                   },
                 },
               },
@@ -145,10 +141,7 @@ export const getSupporterDashboardStatistics = async (
   const analytics = contributionAnalytics[0];
   const statistics = analytics?.statistics[0];
   const distributionMap = new Map(
-    (analytics?.statusDistribution ?? []).map((item) => [
-      item.status,
-      item,
-    ]),
+    (analytics?.statusDistribution ?? []).map((item) => [item.status, item]),
   );
 
   return {

@@ -3,7 +3,9 @@ import { z } from "zod";
 
 const environmentSchema = z
   .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
     PORT: z.coerce.number().int().min(1).max(65_535).default(5000),
     MONGODB_URI: z
       .string()
@@ -40,10 +42,7 @@ const environmentSchema = z
       return;
     }
 
-    for (const key of [
-      "STRIPE_SECRET_KEY",
-      "STRIPE_WEBHOOK_SECRET",
-    ] as const) {
+    for (const key of ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] as const) {
       if (!values[key]) {
         context.addIssue({
           code: "custom",

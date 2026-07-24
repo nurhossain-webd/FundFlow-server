@@ -51,6 +51,16 @@ describe("campaign validation", () => {
     assert.equal(result.success, false);
   });
 
+  it("rejects non-HTTP campaign image URLs", () => {
+    assert.equal(
+      createCampaignSchema.safeParse({
+        ...validCampaign,
+        imageURL: "javascript:alert(document.domain)",
+      }).success,
+      false,
+    );
+  });
+
   it("allows creators to update only title, story, and reward information", () => {
     assert.equal(
       updateCampaignSchema.safeParse({

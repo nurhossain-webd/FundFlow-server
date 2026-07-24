@@ -62,10 +62,7 @@ export const getAdminUsers = async (
     ...(query.role ? { role: query.role } : {}),
     ...(searchExpression
       ? {
-          $or: [
-            { displayName: searchExpression },
-            { email: searchExpression },
-          ],
+          $or: [{ displayName: searchExpression }, { email: searchExpression }],
         }
       : {}),
   };
@@ -92,9 +89,7 @@ export const getAdminUsers = async (
   ]);
 
   return {
-    users: profiles.map((profile) =>
-      toAdminUser(profile, admin.authUserId),
-    ),
+    users: profiles.map((profile) => toAdminUser(profile, admin.authUserId)),
     pagination: {
       page: query.page,
       limit: query.limit,
@@ -108,21 +103,16 @@ const hasRoleSensitiveRecords = async (
   userId: mongoose.Types.ObjectId,
   session: ClientSession,
 ) => {
-  const [
-    campaigns,
-    contributions,
-    payments,
-    withdrawals,
-    reports,
-  ] = await Promise.all([
-    CampaignModel.exists({ creatorId: userId }).session(session),
-    ContributionModel.exists({
-      $or: [{ supporterId: userId }, { creatorId: userId }],
-    }).session(session),
-    CreditPaymentModel.exists({ supporterId: userId }).session(session),
-    WithdrawalModel.exists({ creatorId: userId }).session(session),
-    ReportModel.exists({ reporterId: userId }).session(session),
-  ]);
+  const [campaigns, contributions, payments, withdrawals, reports] =
+    await Promise.all([
+      CampaignModel.exists({ creatorId: userId }).session(session),
+      ContributionModel.exists({
+        $or: [{ supporterId: userId }, { creatorId: userId }],
+      }).session(session),
+      CreditPaymentModel.exists({ supporterId: userId }).session(session),
+      WithdrawalModel.exists({ creatorId: userId }).session(session),
+      ReportModel.exists({ reporterId: userId }).session(session),
+    ]);
 
   return Boolean(
     campaigns || contributions || payments || withdrawals || reports,

@@ -15,14 +15,13 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import { assertTrustedActor } from "../utils/trusted-actor.js";
 import { createNotification } from "./notification.service.js";
 
 const CREDITS_PER_DOLLAR = 20;
 const CENTS_PER_DOLLAR = 100;
 
-const isDuplicateKeyError = (
-  error: unknown,
-): error is { code: number } =>
+const isDuplicateKeyError = (error: unknown): error is { code: number } =>
   typeof error === "object" &&
   error !== null &&
   "code" in error &&
@@ -81,8 +80,9 @@ export const createWithdrawalRequest = async (
   input: CreateWithdrawalInput,
   idempotencyKey: string,
 ) => {
-  const amountInCents =
-    (input.credits * CENTS_PER_DOLLAR) / CREDITS_PER_DOLLAR;
+  assertTrustedActor(creator, "creator");
+
+  const amountInCents = (input.credits * CENTS_PER_DOLLAR) / CREDITS_PER_DOLLAR;
   const normalizedAccountNumber = input.accountNumber.trim();
   const accountCharacters = normalizedAccountNumber.replace(/\s/g, "");
   const accountNumberLast4 = accountCharacters.slice(-4);
@@ -274,8 +274,9 @@ export const getPendingWithdrawalRequests = (query: WithdrawalListQuery) =>
 export const approveWithdrawalRequest = async (
   withdrawalId: string,
   admin: RequestUser,
-) =>
-  withMongoTransaction(async (session) => {
+) => {
+  assertTrustedActor(admin, "admin");
+  return withMongoTransaction(async (session) => {
     assertActiveTransaction(session);
 
     const withdrawal = await WithdrawalModel.findOne({
@@ -359,3 +360,4 @@ export const approveWithdrawalRequest = async (
     withdrawal.reviewedAt = reviewedAt;
     return toSafeWithdrawal(withdrawal);
   });
+};

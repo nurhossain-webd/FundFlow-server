@@ -73,10 +73,7 @@ export const createCheckoutSession = async (
   }
 
   const { packageId } = createCheckoutSessionSchema.parse(request.body);
-  const checkout = await createCreditCheckoutSession(
-    request.user,
-    packageId,
-  );
+  const checkout = await createCreditCheckoutSession(request.user, packageId);
 
   response.status(201).json({
     success: true,

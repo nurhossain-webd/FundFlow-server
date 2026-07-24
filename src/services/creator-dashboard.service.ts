@@ -47,8 +47,8 @@ export const getCreatorDashboardStatistics = async (
   const creatorId = new mongoose.Types.ObjectId(creatorProfileId);
   const now = new Date();
 
-  const [profile, campaignAnalytics, contributionAnalytics] =
-    await Promise.all([
+  const [profile, campaignAnalytics, contributionAnalytics] = await Promise.all(
+    [
       UserProfileModel.findOne({
         _id: creatorId,
         role: "creator",
@@ -138,7 +138,8 @@ export const getCreatorDashboardStatistics = async (
           },
         },
       ]).exec(),
-    ]);
+    ],
+  );
 
   if (!profile) {
     throw new AppError(404, "Creator profile not found");

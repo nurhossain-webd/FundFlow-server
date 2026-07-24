@@ -1,10 +1,7 @@
 import type { Request, Response } from "express";
 import type Stripe from "stripe";
 
-import {
-  getStripeClient,
-  getStripeWebhookSecret,
-} from "../config/stripe.js";
+import { getStripeClient, getStripeWebhookSecret } from "../config/stripe.js";
 import { processStripeWebhookEvent } from "../services/credit-payment.service.js";
 import { AppError } from "../utils/app-error.js";
 

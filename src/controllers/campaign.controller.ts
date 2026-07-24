@@ -67,10 +67,7 @@ export const getCreatorCampaign = async (
 ): Promise<void> => {
   const creator = getRequestUser(request);
   const { campaignId } = campaignIdParamsSchema.parse(request.params);
-  const campaign = await getCreatorCampaignById(
-    campaignId,
-    creator.profileId,
-  );
+  const campaign = await getCreatorCampaignById(campaignId, creator.profileId);
 
   response.status(200).json({
     success: true,
@@ -187,8 +184,9 @@ export const approvePendingCampaign = async (
   request: Request,
   response: Response,
 ): Promise<void> => {
+  const admin = getRequestUser(request);
   const { campaignId } = campaignIdParamsSchema.parse(request.params);
-  const campaign = await approveCampaign(campaignId);
+  const campaign = await approveCampaign(campaignId, admin);
 
   response.status(200).json({
     success: true,
@@ -201,9 +199,10 @@ export const rejectPendingCampaign = async (
   request: Request,
   response: Response,
 ): Promise<void> => {
+  const admin = getRequestUser(request);
   const { campaignId } = campaignIdParamsSchema.parse(request.params);
   const { reason } = rejectCampaignSchema.parse(request.body);
-  const campaign = await rejectCampaign(campaignId, reason);
+  const campaign = await rejectCampaign(campaignId, admin, reason);
 
   response.status(200).json({
     success: true,

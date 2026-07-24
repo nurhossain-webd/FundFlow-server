@@ -25,11 +25,7 @@ export const reportCampaign = async (
 
   const { campaignId } = campaignReportParamsSchema.parse(request.params);
   const input = createCampaignReportSchema.parse(request.body);
-  const report = await createCampaignReport(
-    request.user,
-    campaignId,
-    input,
-  );
+  const report = await createCampaignReport(request.user, campaignId, input);
 
   response.status(201).json({
     success: true,

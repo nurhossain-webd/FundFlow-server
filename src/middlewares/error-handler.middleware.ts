@@ -57,7 +57,17 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   if (statusCode >= 500) {
-    console.error(error);
+    console.error(
+      "[FundFlow API] Request failed",
+      error instanceof Error
+        ? {
+            name: error.name,
+            ...(env.NODE_ENV !== "production"
+              ? { message: error.message, stack: error.stack }
+              : {}),
+          }
+        : { name: "UnknownError" },
+    );
   }
 
   response.status(statusCode).json(body);

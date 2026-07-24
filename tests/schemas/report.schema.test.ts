@@ -14,8 +14,7 @@ describe("campaign report validation", () => {
     assert.equal(
       createCampaignReportSchema.safeParse({
         reason: "misleading_information",
-        details:
-          "The funding description conflicts with the campaign updates.",
+        details: "The funding description conflicts with the campaign updates.",
       }).success,
       true,
     );
@@ -52,9 +51,10 @@ describe("campaign report validation", () => {
       adminReportListQuerySchema.parse({
         page: "2",
         limit: "50",
+        search: "solar",
         status: "pending",
       }),
-      { page: 2, limit: 50, status: "pending" },
+      { page: 2, limit: 50, search: "solar", status: "pending" },
     );
     assert.equal(
       resolveReportSchema.safeParse({

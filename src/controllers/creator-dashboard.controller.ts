@@ -11,9 +11,7 @@ export const getCreatorDashboard = async (
     throw new AppError(401, "Authentication required");
   }
 
-  const dashboard = await getCreatorDashboardStatistics(
-    request.user.profileId,
-  );
+  const dashboard = await getCreatorDashboardStatistics(request.user.profileId);
 
   response.status(200).json({
     success: true,

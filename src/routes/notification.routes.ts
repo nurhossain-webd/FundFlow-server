@@ -17,10 +17,7 @@ notificationRouter.get(
   "/unread-count",
   asyncHandler(getUnreadNotificationCount),
 );
-notificationRouter.patch(
-  "/read-all",
-  asyncHandler(markAllNotificationsRead),
-);
+notificationRouter.patch("/read-all", asyncHandler(markAllNotificationsRead));
 notificationRouter.patch(
   "/:notificationId/read",
   asyncHandler(markNotificationRead),

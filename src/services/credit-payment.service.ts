@@ -17,6 +17,7 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import { assertTrustedActor } from "../utils/trusted-actor.js";
 import { createNotification } from "./notification.service.js";
 
 export { getPublicCreditPackages };
@@ -25,6 +26,7 @@ export const createCreditCheckoutSession = async (
   supporter: RequestUser,
   packageId: CreditPackageId,
 ) => {
+  assertTrustedActor(supporter, "supporter");
   const stripe = getStripeClient();
   const creditPackage = CREDIT_PACKAGES[packageId];
   const paymentId = new mongoose.Types.ObjectId();
@@ -256,9 +258,7 @@ const completeCheckoutPayment = async (
           status: "completed",
           completedAt: new Date(),
           processedStripeEventId: eventId,
-          ...(stripePaymentIntentId
-            ? { stripePaymentIntentId }
-            : {}),
+          ...(stripePaymentIntentId ? { stripePaymentIntentId } : {}),
         },
       },
       { session },

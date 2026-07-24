@@ -45,11 +45,7 @@ export const createCreatorWithdrawal = async (
   const idempotencyKey = withdrawalIdempotencyKeySchema.parse(
     request.get("Idempotency-Key"),
   );
-  const result = await createWithdrawalRequest(
-    creator,
-    input,
-    idempotencyKey,
-  );
+  const result = await createWithdrawalRequest(creator, input, idempotencyKey);
 
   response.status(result.created ? 201 : 200).json({
     success: true,

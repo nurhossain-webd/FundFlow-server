@@ -64,8 +64,7 @@ describe("withdrawal validation", () => {
       true,
     );
     assert.equal(
-      withdrawalIdempotencyKeySchema.safeParse("withdrawal:req:123456")
-        .success,
+      withdrawalIdempotencyKeySchema.safeParse("withdrawal:req:123456").success,
       true,
     );
     assert.equal(
@@ -73,8 +72,7 @@ describe("withdrawal validation", () => {
       false,
     );
     assert.equal(
-      withdrawalListQuerySchema.safeParse({ status: "paid_by_client" })
-        .success,
+      withdrawalListQuerySchema.safeParse({ status: "paid_by_client" }).success,
       false,
     );
   });

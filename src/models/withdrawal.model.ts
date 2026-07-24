@@ -1,9 +1,6 @@
 import mongoose, { type Model } from "mongoose";
 
-import {
-  EMAIL_PATTERN,
-  isPositiveSafeInteger,
-} from "./model.utils.js";
+import { EMAIL_PATTERN, isPositiveSafeInteger } from "./model.utils.js";
 
 const { model, models, Schema } = mongoose;
 
@@ -172,10 +169,7 @@ const withdrawalSchema = new Schema<IWithdrawal>(
   },
 );
 
-withdrawalSchema.index(
-  { creatorId: 1, idempotencyKey: 1 },
-  { unique: true },
-);
+withdrawalSchema.index({ creatorId: 1, idempotencyKey: 1 }, { unique: true });
 withdrawalSchema.index({ creatorEmail: 1, createdAt: -1 });
 withdrawalSchema.index({ creatorId: 1, createdAt: -1 });
 withdrawalSchema.index({ status: 1, createdAt: -1 });

@@ -41,36 +41,35 @@ export const getTopFundedCampaigns = async (): Promise<TopCampaign[]> => {
   }));
 };
 
-export const getPlatformStatistics =
-  async (): Promise<PlatformStatistics> => {
-    const [campaignTotals, activeCreators, contributingSupporters] =
-      await Promise.all([
-        CampaignModel.aggregate<{
-          approvedCampaigns: number;
-          totalRaisedCredits: number;
-        }>([
-          { $match: { status: "approved" } },
-          {
-            $group: {
-              _id: null,
-              approvedCampaigns: { $sum: 1 },
-              totalRaisedCredits: { $sum: "$amountRaised" },
-            },
+export const getPlatformStatistics = async (): Promise<PlatformStatistics> => {
+  const [campaignTotals, activeCreators, contributingSupporters] =
+    await Promise.all([
+      CampaignModel.aggregate<{
+        approvedCampaigns: number;
+        totalRaisedCredits: number;
+      }>([
+        { $match: { status: "approved" } },
+        {
+          $group: {
+            _id: null,
+            approvedCampaigns: { $sum: 1 },
+            totalRaisedCredits: { $sum: "$amountRaised" },
           },
-        ]).exec(),
-        UserProfileModel.countDocuments({
-          role: "creator",
-          isSuspended: false,
-        }).exec(),
-        ContributionModel.distinct("supporterId", {
-          status: "approved",
-        }).exec(),
-      ]);
+        },
+      ]).exec(),
+      UserProfileModel.countDocuments({
+        role: "creator",
+        isSuspended: false,
+      }).exec(),
+      ContributionModel.distinct("supporterId", {
+        status: "approved",
+      }).exec(),
+    ]);
 
-    return {
-      totalRaisedCredits: campaignTotals[0]?.totalRaisedCredits ?? 0,
-      approvedCampaigns: campaignTotals[0]?.approvedCampaigns ?? 0,
-      activeCreators,
-      contributingSupporters: contributingSupporters.length,
-    };
+  return {
+    totalRaisedCredits: campaignTotals[0]?.totalRaisedCredits ?? 0,
+    approvedCampaigns: campaignTotals[0]?.approvedCampaigns ?? 0,
+    activeCreators,
+    contributingSupporters: contributingSupporters.length,
   };
+};

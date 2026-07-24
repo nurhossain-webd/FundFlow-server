@@ -232,8 +232,7 @@ export const getAdminDashboardStatistics = async () => {
       totalAvailableUserCredits:
         userResult?.totals[0]?.totalAvailableUserCredits ?? 0,
       totalPaymentsProcessed: paymentTotals?.totalPaymentsProcessed ?? 0,
-      totalPaymentAmountInCents:
-        paymentTotals?.totalPaymentAmountInCents ?? 0,
+      totalPaymentAmountInCents: paymentTotals?.totalPaymentAmountInCents ?? 0,
       paymentCurrency: "usd",
     },
     userRoleDistribution: USER_ROLES.map((role) => ({
@@ -246,12 +245,12 @@ export const getAdminDashboardStatistics = async () => {
       count: campaignStatusMap.get(status)?.count ?? 0,
     })),
     recentPaymentTotals: paymentResult?.recentPaymentTotals ?? [],
-    newestPendingCampaigns: (
-      campaignResult?.newestPendingCampaigns ?? []
-    ).map((campaign) => ({
-      ...campaign,
-      campaignId: String(campaign.campaignId),
-    })),
+    newestPendingCampaigns: (campaignResult?.newestPendingCampaigns ?? []).map(
+      (campaign) => ({
+        ...campaign,
+        campaignId: String(campaign.campaignId),
+      }),
+    ),
     newestPendingWithdrawals: (
       withdrawalResult?.newestPendingWithdrawals ?? []
     ).map((withdrawal) => ({

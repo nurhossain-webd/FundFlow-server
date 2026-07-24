@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 
-import {
-  CampaignModel,
-  type ICampaign,
-} from "../models/campaign.model.js";
+import { CampaignModel, type ICampaign } from "../models/campaign.model.js";
 import { ContributionModel } from "../models/contribution.model.js";
 import { ReportModel } from "../models/report.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
@@ -18,6 +15,7 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import { assertTrustedActor } from "../utils/trusted-actor.js";
 import {
   createNotification,
   createNotifications,
@@ -36,10 +34,7 @@ const createSearchFilter = (
   const expression = new RegExp(escapeRegularExpression(search), "i");
 
   return {
-    $or: [
-      { title: expression },
-      { creatorName: expression },
-    ],
+    $or: [{ title: expression }, { creatorName: expression }],
   };
 };
 
@@ -138,6 +133,7 @@ export const createCampaign = async (
   creator: RequestUser,
   input: CreateCampaignInput,
 ) => {
+  assertTrustedActor(creator, "creator");
   const campaign = await CampaignModel.create({
     ...input,
     creatorId: new mongoose.Types.ObjectId(creator.profileId),
@@ -180,9 +176,7 @@ export const getCreatorCampaignById = async (
   return campaign;
 };
 
-export const getApprovedActiveCampaigns = (
-  query: CampaignListQuery,
-) =>
+export const getApprovedActiveCampaigns = (query: CampaignListQuery) =>
   getPaginatedCampaigns(
     {
       status: "approved",
@@ -191,9 +185,7 @@ export const getApprovedActiveCampaigns = (
     query,
   );
 
-export const getApprovedActiveCampaignById = async (
-  campaignId: string,
-) => {
+export const getApprovedActiveCampaignById = async (campaignId: string) => {
   const campaign = await CampaignModel.findOne({
     _id: campaignId,
     status: "approved",
@@ -242,9 +234,7 @@ export const updateCreatorCampaign = async (
   return campaign;
 };
 
-export const getPendingCampaigns = (
-  query: CampaignListQuery,
-) =>
+export const getPendingCampaigns = (query: CampaignListQuery) =>
   getPaginatedCampaigns(
     {
       status: "pending",
@@ -257,10 +247,12 @@ export const getAdminCampaigns = (query: CampaignListQuery) =>
 
 const reviewCampaign = async (
   campaignId: string,
+  admin: RequestUser,
   status: "approved" | "rejected",
   reason?: string,
-) =>
-  withMongoTransaction(async (session) => {
+) => {
+  assertTrustedActor(admin, "admin");
+  return withMongoTransaction(async (session) => {
     assertActiveTransaction(session);
 
     const campaign = await CampaignModel.findOne({
@@ -295,10 +287,7 @@ const reviewCampaign = async (
         recipientId: creator._id,
         recipientAuthUserId: creator.authUserId,
         toEmail: creator.email,
-        type:
-          status === "approved"
-            ? "campaign_approved"
-            : "campaign_rejected",
+        type: status === "approved" ? "campaign_approved" : "campaign_rejected",
         title:
           status === "approved"
             ? "Campaign approved"
@@ -316,12 +305,16 @@ const reviewCampaign = async (
 
     return campaign.toObject();
   });
+};
 
-export const approveCampaign = (campaignId: string) =>
-  reviewCampaign(campaignId, "approved");
+export const approveCampaign = (campaignId: string, admin: RequestUser) =>
+  reviewCampaign(campaignId, admin, "approved");
 
-export const rejectCampaign = (campaignId: string, reason?: string) =>
-  reviewCampaign(campaignId, "rejected", reason);
+export const rejectCampaign = (
+  campaignId: string,
+  admin: RequestUser,
+  reason?: string,
+) => reviewCampaign(campaignId, admin, "rejected", reason);
 
 interface DeleteCampaignOptions {
   campaignId: string;
@@ -336,6 +329,7 @@ export const deleteCampaignWithRefunds = async ({
 }: DeleteCampaignOptions) =>
   withMongoTransaction(async (session) => {
     assertActiveTransaction(session);
+    assertTrustedActor(actor, "creator", "admin");
 
     const campaign = await CampaignModel.findById(campaignId)
       .session(session)
@@ -535,7 +529,8 @@ export const deleteCampaignWithRefunds = async ({
             toEmail: creator.email,
             type: "campaign_deleted",
             title: "Campaign removed",
-            message: `${campaign.title} was removed by an administrator. ${reason ?? ""}`.trim(),
+            message:
+              `${campaign.title} was removed by an administrator. ${reason ?? ""}`.trim(),
             relatedEntityType: "campaign",
             relatedEntityId: campaign._id,
             actionRoute: "/dashboard/creator/campaigns",

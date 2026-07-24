@@ -1,10 +1,7 @@
 import mongoose from "mongoose";
 
 import { CampaignModel } from "../models/campaign.model.js";
-import {
-  ReportModel,
-  type IReport,
-} from "../models/report.model.js";
+import { ReportModel, type IReport } from "../models/report.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import type {
   AdminReportListQuery,
@@ -21,13 +18,14 @@ import {
   createNotifications,
 } from "./notification.service.js";
 
-const isDuplicateKeyError = (
-  error: unknown,
-): error is { code: number } =>
+const isDuplicateKeyError = (error: unknown): error is { code: number } =>
   typeof error === "object" &&
   error !== null &&
   "code" in error &&
   error.code === 11_000;
+
+const escapeRegularExpression = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toAdminReport = (report: {
   _id: mongoose.Types.ObjectId;
@@ -153,9 +151,23 @@ export const createCampaignReport = async (
 };
 
 export const getAdminReports = async (query: AdminReportListQuery) => {
+  const searchExpression = query.search
+    ? new RegExp(escapeRegularExpression(query.search), "i")
+    : undefined;
   const filter: mongoose.QueryFilter<IReport> = {
     targetType: "campaign",
     ...(query.status ? { status: query.status } : {}),
+    ...(searchExpression
+      ? {
+          $or: [
+            { reporterName: searchExpression },
+            { reporterEmail: searchExpression },
+            { campaignTitle: searchExpression },
+            { creatorName: searchExpression },
+            { creatorEmail: searchExpression },
+          ],
+        }
+      : {}),
   };
   const skip = (query.page - 1) * query.limit;
   const [reports, total] = await Promise.all([
@@ -263,10 +275,7 @@ export const suspendReportedCampaign = async (
     ).exec();
 
     if (!campaign) {
-      throw new AppError(
-        409,
-        "Only an approved campaign can be suspended",
-      );
+      throw new AppError(409, "Only an approved campaign can be suspended");
     }
 
     const activeReports = await ReportModel.find({

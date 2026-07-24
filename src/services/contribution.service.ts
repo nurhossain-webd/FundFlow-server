@@ -16,6 +16,7 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import { assertTrustedActor } from "../utils/trusted-actor.js";
 import { createNotification } from "./notification.service.js";
 
 const getPagination = (query: ContributionListQuery, total: number) => ({
@@ -62,9 +63,7 @@ const assertMatchingIdempotentContribution = (
   }
 };
 
-const isDuplicateKeyError = (
-  error: unknown,
-): error is { code: number } =>
+const isDuplicateKeyError = (error: unknown): error is { code: number } =>
   typeof error === "object" &&
   error !== null &&
   "code" in error &&
@@ -75,6 +74,8 @@ export const createContribution = async (
   input: CreateContributionInput,
   idempotencyKey: string,
 ) => {
+  assertTrustedActor(supporter, "supporter");
+
   try {
     return await withMongoTransaction(async (session) => {
       assertActiveTransaction(session);
@@ -350,8 +351,9 @@ export const getCreatorContributionStatistics = (creatorProfileId: string) =>
 export const approveContribution = async (
   contributionId: string,
   creator: RequestUser,
-) =>
-  withMongoTransaction(async (session) => {
+) => {
+  assertTrustedActor(creator, "creator");
+  return withMongoTransaction(async (session) => {
     assertActiveTransaction(session);
 
     const contribution = await ContributionModel.findOneAndUpdate(
@@ -430,13 +432,15 @@ export const approveContribution = async (
 
     return contribution.toObject();
   });
+};
 
 export const rejectContribution = async (
   contributionId: string,
   creator: RequestUser,
   reason: string,
-) =>
-  withMongoTransaction(async (session) => {
+) => {
+  assertTrustedActor(creator, "creator");
+  return withMongoTransaction(async (session) => {
     assertActiveTransaction(session);
 
     const contribution = await ContributionModel.findOneAndUpdate(
@@ -504,3 +508,4 @@ export const rejectContribution = async (
 
     return contribution.toObject();
   });
+};

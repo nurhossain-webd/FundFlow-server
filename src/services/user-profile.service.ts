@@ -10,8 +10,7 @@ import { AppError } from "../utils/app-error.js";
 import { withMongoTransaction } from "../utils/mongo-transaction.js";
 
 export const PUBLIC_REGISTRATION_ROLES = ["supporter", "creator"] as const;
-export type PublicRegistrationRole =
-  (typeof PUBLIC_REGISTRATION_ROLES)[number];
+export type PublicRegistrationRole = (typeof PUBLIC_REGISTRATION_ROLES)[number];
 
 const INITIAL_CREDITS: Readonly<Record<PublicRegistrationRole, number>> = {
   supporter: 50,
@@ -32,9 +31,7 @@ const findExistingProfile = async (
     .lean<IUserProfile>()
     .exec();
 
-const isDuplicateKeyError = (
-  error: unknown,
-): error is { code: number } =>
+const isDuplicateKeyError = (error: unknown): error is { code: number } =>
   typeof error === "object" &&
   error !== null &&
   "code" in error &&

@@ -37,11 +37,7 @@ export const createSupporterContribution = async (
   const idempotencyKey = contributionIdempotencyKeySchema.parse(
     request.get("Idempotency-Key"),
   );
-  const result = await createContribution(
-    supporter,
-    input,
-    idempotencyKey,
-  );
+  const result = await createContribution(supporter, input, idempotencyKey);
 
   response.status(result.created ? 201 : 200).json({
     success: true,
@@ -58,10 +54,7 @@ export const listSupporterContributions = async (
 ): Promise<void> => {
   const supporter = getRequestUser(request);
   const query = contributionListQuerySchema.parse(request.query);
-  const result = await getSupporterContributions(
-    supporter.profileId,
-    query,
-  );
+  const result = await getSupporterContributions(supporter.profileId, query);
 
   response.status(200).json({
     success: true,
@@ -107,10 +100,7 @@ export const listCreatorPendingContributions = async (
 ): Promise<void> => {
   const creator = getRequestUser(request);
   const query = contributionListQuerySchema.parse(request.query);
-  const result = await getCreatorPendingContributions(
-    creator.profileId,
-    query,
-  );
+  const result = await getCreatorPendingContributions(creator.profileId, query);
 
   response.status(200).json({
     success: true,
@@ -123,9 +113,7 @@ export const getCreatorContribution = async (
   response: Response,
 ): Promise<void> => {
   const creator = getRequestUser(request);
-  const { contributionId } = contributionIdParamsSchema.parse(
-    request.params,
-  );
+  const { contributionId } = contributionIdParamsSchema.parse(request.params);
   const contribution = await getCreatorContributionById(
     contributionId,
     creator.profileId,
@@ -142,9 +130,7 @@ export const getCreatorStatistics = async (
   response: Response,
 ): Promise<void> => {
   const creator = getRequestUser(request);
-  const statistics = await getCreatorContributionStatistics(
-    creator.profileId,
-  );
+  const statistics = await getCreatorContributionStatistics(creator.profileId);
 
   response.status(200).json({
     success: true,
@@ -157,9 +143,7 @@ export const approvePendingContribution = async (
   response: Response,
 ): Promise<void> => {
   const creator = getRequestUser(request);
-  const { contributionId } = contributionIdParamsSchema.parse(
-    request.params,
-  );
+  const { contributionId } = contributionIdParamsSchema.parse(request.params);
   const contribution = await approveContribution(contributionId, creator);
 
   response.status(200).json({
@@ -174,9 +158,7 @@ export const rejectPendingContribution = async (
   response: Response,
 ): Promise<void> => {
   const creator = getRequestUser(request);
-  const { contributionId } = contributionIdParamsSchema.parse(
-    request.params,
-  );
+  const { contributionId } = contributionIdParamsSchema.parse(request.params);
   const { reason } = rejectContributionSchema.parse(request.body);
   const contribution = await rejectContribution(
     contributionId,

@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-import {
-  REPORT_REASONS,
-  REPORT_STATUSES,
-} from "../models/report.model.js";
+import { REPORT_REASONS, REPORT_STATUSES } from "../models/report.model.js";
 
 const objectIdPattern = /^[a-f\d]{24}$/i;
 
@@ -32,6 +29,7 @@ export const adminReportListQuerySchema = z
   .object({
     page: optionalIntegerQuery(1, 10_000),
     limit: optionalIntegerQuery(20, 100),
+    search: z.string().trim().max(100).optional(),
     status: z.enum(REPORT_STATUSES).optional(),
   })
   .strict();
@@ -53,6 +51,4 @@ export const resolveReportSchema = z
 export type CreateCampaignReportInput = z.infer<
   typeof createCampaignReportSchema
 >;
-export type AdminReportListQuery = z.infer<
-  typeof adminReportListQuerySchema
->;
+export type AdminReportListQuery = z.infer<typeof adminReportListQuerySchema>;
