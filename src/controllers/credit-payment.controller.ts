@@ -3,8 +3,14 @@ import type { Request, Response } from "express";
 import {
   getPublicCreditPackages,
   createCreditCheckoutSession,
+  getCreditCheckoutStatus,
+  getSupporterPaymentHistory,
 } from "../services/credit-payment.service.js";
-import { createCheckoutSessionSchema } from "../schemas/credit-payment.schema.js";
+import {
+  checkoutSessionParamsSchema,
+  createCheckoutSessionSchema,
+  paymentHistoryQuerySchema,
+} from "../schemas/credit-payment.schema.js";
 import { AppError } from "../utils/app-error.js";
 
 export const listCreditPackages = (
@@ -16,6 +22,45 @@ export const listCreditPackages = (
     data: {
       packages: getPublicCreditPackages(),
     },
+  });
+};
+
+export const listPaymentHistory = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  if (!request.user) {
+    throw new AppError(401, "Authentication required");
+  }
+
+  const query = paymentHistoryQuerySchema.parse(request.query);
+  const history = await getSupporterPaymentHistory(request.user, query);
+
+  response.status(200).json({
+    success: true,
+    data: history,
+  });
+};
+
+export const getCheckoutStatus = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  if (!request.user) {
+    throw new AppError(401, "Authentication required");
+  }
+
+  const { checkoutSessionId } = checkoutSessionParamsSchema.parse(
+    request.params,
+  );
+  const payment = await getCreditCheckoutStatus(
+    request.user,
+    checkoutSessionId,
+  );
+
+  response.status(200).json({
+    success: true,
+    data: { payment },
   });
 };
 

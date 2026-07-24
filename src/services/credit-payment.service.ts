@@ -12,6 +12,7 @@ import { CreditPaymentModel } from "../models/credit-payment.model.js";
 import { NotificationModel } from "../models/notification.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import type { RequestUser } from "../types/auth-user.js";
+import type { PaymentHistoryQuery } from "../schemas/credit-payment.schema.js";
 import { AppError } from "../utils/app-error.js";
 import {
   assertActiveTransaction,
@@ -36,8 +37,8 @@ export const createCreditCheckoutSession = async (
         mode: "payment",
         client_reference_id: supporter.authUserId,
         customer_email: supporter.email,
-        success_url: `${env.CLIENT_URL}/dashboard/supporter/credits?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${env.CLIENT_URL}/dashboard/supporter/credits?payment=cancelled`,
+        success_url: `${env.CLIENT_URL}/dashboard/supporter/credits/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${env.CLIENT_URL}/dashboard/supporter/credits/cancel`,
         line_items: [
           {
             quantity: 1,
@@ -80,6 +81,7 @@ export const createCreditCheckoutSession = async (
       creditsPurchased: creditPackage.credits,
       amountInCents: creditPackage.amountInCents,
       currency: creditPackage.currency,
+      paymentMethod: "Card",
       status: "pending",
       idempotencyKey,
       stripeCheckoutSessionId: checkoutSession.id,
@@ -102,6 +104,88 @@ export const createCreditCheckoutSession = async (
 
     throw new AppError(502, "Unable to create Stripe Checkout Session");
   }
+};
+
+export const getSupporterPaymentHistory = async (
+  supporter: RequestUser,
+  query: PaymentHistoryQuery,
+) => {
+  const filter = {
+    supporterId: new mongoose.Types.ObjectId(supporter.profileId),
+    supporterAuthUserId: supporter.authUserId,
+  };
+  const skip = (query.page - 1) * query.limit;
+
+  const [payments, total] = await Promise.all([
+    CreditPaymentModel.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(query.limit)
+      .select({
+        creditsPurchased: 1,
+        amountInCents: 1,
+        currency: 1,
+        paymentMethod: 1,
+        status: 1,
+        createdAt: 1,
+      })
+      .lean()
+      .exec(),
+    CreditPaymentModel.countDocuments(filter).exec(),
+  ]);
+
+  return {
+    payments: payments.map((payment) => ({
+      transactionId: payment._id.toString(),
+      creditsPurchased: payment.creditsPurchased,
+      amountInCents: payment.amountInCents,
+      currency: payment.currency,
+      paymentMethod: payment.paymentMethod ?? "Card",
+      status: payment.status,
+      createdAt: payment.createdAt.toISOString(),
+    })),
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages: Math.ceil(total / query.limit),
+    },
+  };
+};
+
+export const getCreditCheckoutStatus = async (
+  supporter: RequestUser,
+  checkoutSessionId: string,
+) => {
+  const payment = await CreditPaymentModel.findOne({
+    stripeCheckoutSessionId: checkoutSessionId,
+    supporterId: supporter.profileId,
+    supporterAuthUserId: supporter.authUserId,
+  })
+    .select({
+      packageId: 1,
+      creditsPurchased: 1,
+      amountInCents: 1,
+      currency: 1,
+      status: 1,
+      completedAt: 1,
+    })
+    .lean()
+    .exec();
+
+  if (!payment) {
+    throw new AppError(404, "Credit payment was not found");
+  }
+
+  return {
+    paymentId: payment._id.toString(),
+    packageId: payment.packageId,
+    creditsPurchased: payment.creditsPurchased,
+    amountInCents: payment.amountInCents,
+    currency: payment.currency,
+    status: payment.status,
+    completedAt: payment.completedAt?.toISOString() ?? null,
+  };
 };
 
 const getPaymentIntentId = (

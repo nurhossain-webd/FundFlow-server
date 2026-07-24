@@ -25,6 +25,7 @@ export interface ICreditPayment {
   creditsPurchased: number;
   amountInCents: number;
   currency: string;
+  paymentMethod?: string;
   status: CreditPaymentStatus;
   idempotencyKey: string;
   stripeCheckoutSessionId?: string;
@@ -94,6 +95,12 @@ const creditPaymentSchema = new Schema<ICreditPayment>(
       maxlength: 3,
       immutable: true,
     },
+    paymentMethod: {
+      type: String,
+      trim: true,
+      maxlength: 50,
+      immutable: true,
+    },
     status: {
       type: String,
       enum: CREDIT_PAYMENT_STATUSES,
@@ -148,6 +155,7 @@ creditPaymentSchema.index(
   { unique: true, sparse: true },
 );
 creditPaymentSchema.index({ supporterEmail: 1, createdAt: -1 });
+creditPaymentSchema.index({ supporterId: 1, createdAt: -1 });
 creditPaymentSchema.index({ status: 1, createdAt: -1 });
 creditPaymentSchema.index(
   { processedStripeEventId: 1 },

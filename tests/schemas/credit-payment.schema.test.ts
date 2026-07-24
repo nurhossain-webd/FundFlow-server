@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { CREDIT_PACKAGES } from "../../src/config/credit-packages.js";
-import { createCheckoutSessionSchema } from "../../src/schemas/credit-payment.schema.js";
+import {
+  checkoutSessionParamsSchema,
+  createCheckoutSessionSchema,
+  paymentHistoryQuerySchema,
+} from "../../src/schemas/credit-payment.schema.js";
 
 describe("credit purchase validation", () => {
   it("keeps prices and credits in the trusted server catalog", () => {
@@ -59,6 +63,36 @@ describe("credit purchase validation", () => {
       createCheckoutSessionSchema.safeParse({
         packageId: "custom_package",
       }).success,
+      false,
+    );
+  });
+
+  it("accepts Stripe Checkout IDs and rejects unrelated identifiers", () => {
+    assert.equal(
+      checkoutSessionParamsSchema.safeParse({
+        checkoutSessionId: "cs_test_example123",
+      }).success,
+      true,
+    );
+    assert.equal(
+      checkoutSessionParamsSchema.safeParse({
+        checkoutSessionId: "payment-from-query-string",
+      }).success,
+      false,
+    );
+  });
+
+  it("coerces and bounds payment history pagination", () => {
+    assert.deepEqual(paymentHistoryQuerySchema.parse({}), {
+      page: 1,
+      limit: 10,
+    });
+    assert.deepEqual(
+      paymentHistoryQuerySchema.parse({ page: "3", limit: "20" }),
+      { page: 3, limit: 20 },
+    );
+    assert.equal(
+      paymentHistoryQuerySchema.safeParse({ page: 0, limit: 51 }).success,
       false,
     );
   });
