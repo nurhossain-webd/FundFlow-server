@@ -222,7 +222,7 @@ export const updateCreatorCampaign = async (
       creatorId: creatorProfileId,
     },
     { $set: input },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   )
     .lean()
     .exec();

@@ -132,7 +132,7 @@ export const createWithdrawalRequest = async (
           },
         },
         { $inc: { reservedRaisedCredits: input.credits } },
-        { new: true, session },
+        { returnDocument: "after", session },
       ).exec();
 
       if (!creatorProfile) {

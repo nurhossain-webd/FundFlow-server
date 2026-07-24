@@ -172,7 +172,7 @@ export const markUserNotificationRead = async (
         readAt: new Date(),
       },
     },
-    { new: true },
+    { returnDocument: "after" },
   )
     .lean()
     .exec();

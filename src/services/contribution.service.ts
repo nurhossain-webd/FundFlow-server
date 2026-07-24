@@ -143,7 +143,7 @@ export const createContribution = async (
           credits: { $gte: input.amount },
         },
         { $inc: { credits: -input.amount } },
-        { new: true, session },
+        { returnDocument: "after", session },
       )
         .lean()
         .exec();
@@ -389,7 +389,7 @@ export const approveContribution = async (
           reviewedByAuthUserId: creator.authUserId,
         },
       },
-      { new: true, session },
+      { returnDocument: "after", session },
     ).exec();
 
     if (!contribution) {
@@ -479,7 +479,7 @@ export const rejectContribution = async (
           refundReason: reason,
         },
       },
-      { new: true, session },
+      { returnDocument: "after", session },
     ).exec();
 
     if (!contribution) {

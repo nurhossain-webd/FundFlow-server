@@ -214,7 +214,7 @@ export const resolveCampaignReport = async (
         },
         $unset: { activeDeduplicationKey: 1 },
       },
-      { new: true, session },
+      { returnDocument: "after", session },
     ).exec();
 
     if (!report) {
@@ -271,7 +271,7 @@ export const suspendReportedCampaign = async (
         status: "approved",
       },
       { $set: { status: "suspended" } },
-      { new: true, session },
+      { returnDocument: "after", session },
     ).exec();
 
     if (!campaign) {
