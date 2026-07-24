@@ -154,6 +154,7 @@ creditPaymentSchema.index(
 creditPaymentSchema.index({ supporterEmail: 1, createdAt: -1 });
 creditPaymentSchema.index({ supporterId: 1, createdAt: -1 });
 creditPaymentSchema.index({ status: 1, createdAt: -1 });
+creditPaymentSchema.index({ status: 1, currency: 1, completedAt: 1 });
 creditPaymentSchema.index(
   { processedStripeEventId: 1 },
   { unique: true, sparse: true },

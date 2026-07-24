@@ -73,6 +73,16 @@ export const requireUserProfile: RequestHandler = asyncHandler(
     const profile = await UserProfileModel.findOne({
       authUserId: request.authUser.id,
     })
+      .select({
+        authUserId: 1,
+        displayName: 1,
+        email: 1,
+        role: 1,
+        credits: 1,
+        raisedCredits: 1,
+        isSuspended: 1,
+        isDeleted: 1,
+      })
       .lean()
       .exec();
 

@@ -86,6 +86,7 @@ export const getCreatorDashboardStatistics = async (
             ],
             raisedByCampaign: [
               { $sort: { amountRaised: -1, createdAt: -1 } },
+              { $limit: 12 },
               {
                 $project: {
                   _id: 0,

@@ -139,6 +139,7 @@ campaignSchema.index({ status: 1, createdAt: -1 });
 campaignSchema.index({ status: 1, amountRaised: -1 });
 campaignSchema.index({ status: 1, deadline: 1, amountRaised: -1 });
 campaignSchema.index({ creatorId: 1, status: 1, createdAt: -1 });
+campaignSchema.index({ creatorId: 1, amountRaised: -1, createdAt: -1 });
 campaignSchema.index({ creatorEmail: 1, createdAt: -1 });
 campaignSchema.index({ deadline: 1, status: 1 });
 campaignSchema.index({ category: 1, status: 1 });

@@ -26,6 +26,24 @@ const getPagination = (query: ContributionListQuery, total: number) => ({
   totalPages: Math.ceil(total / query.limit),
 });
 
+const contributionResponseProjection = {
+  campaignId: 1,
+  campaignTitle: 1,
+  supporterName: 1,
+  supporterEmail: 1,
+  creatorName: 1,
+  creatorEmail: 1,
+  amount: 1,
+  message: 1,
+  status: 1,
+  reviewedAt: 1,
+  rejectionReason: 1,
+  refundedAt: 1,
+  refundReason: 1,
+  createdAt: 1,
+  updatedAt: 1,
+} as const;
+
 const getPaginatedContributions = async (
   filter: mongoose.QueryFilter<IContribution>,
   query: ContributionListQuery,
@@ -36,6 +54,7 @@ const getPaginatedContributions = async (
       .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(query.limit)
+      .select(contributionResponseProjection)
       .lean()
       .exec(),
     ContributionModel.countDocuments(filter).exec(),
@@ -252,6 +271,7 @@ export const getCreatorContributionById = async (
     _id: contributionId,
     creatorId: creatorProfileId,
   })
+    .select(contributionResponseProjection)
     .lean()
     .exec();
 

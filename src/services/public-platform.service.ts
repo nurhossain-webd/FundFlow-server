@@ -19,6 +19,10 @@ interface PlatformStatistics {
   contributingSupporters: number;
 }
 
+interface ContributingSupporterCount {
+  count: number;
+}
+
 export const getTopFundedCampaigns = async (): Promise<TopCampaign[]> => {
   const campaigns = await CampaignModel.find({
     status: "approved",
@@ -61,15 +65,17 @@ export const getPlatformStatistics = async (): Promise<PlatformStatistics> => {
         role: "creator",
         isSuspended: false,
       }).exec(),
-      ContributionModel.distinct("supporterId", {
-        status: "approved",
-      }).exec(),
+      ContributionModel.aggregate<ContributingSupporterCount>([
+        { $match: { status: "approved" } },
+        { $group: { _id: "$supporterId" } },
+        { $count: "count" },
+      ]).exec(),
     ]);
 
   return {
     totalRaisedCredits: campaignTotals[0]?.totalRaisedCredits ?? 0,
     approvedCampaigns: campaignTotals[0]?.approvedCampaigns ?? 0,
     activeCreators,
-    contributingSupporters: contributingSupporters.length,
+    contributingSupporters: contributingSupporters[0]?.count ?? 0,
   };
 };

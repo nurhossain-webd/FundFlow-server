@@ -85,6 +85,7 @@ export const getSupporterDashboardStatistics = async (
               },
             },
             { $sort: { approvedAmount: -1, "_id.campaignTitle": 1 } },
+            { $limit: 12 },
             {
               $project: {
                 _id: 0,
