@@ -21,8 +21,10 @@ export interface IContribution {
   supporterName: string;
   supporterEmail: string;
   creatorId: mongoose.Types.ObjectId;
+  creatorName?: string;
   creatorEmail: string;
   amount: number;
+  message?: string;
   status: ContributionStatus;
   idempotencyKey: string;
   reviewedAt?: Date;
@@ -82,6 +84,12 @@ const contributionSchema = new Schema<IContribution>(
       required: true,
       immutable: true,
     },
+    creatorName: {
+      type: String,
+      trim: true,
+      maxlength: 80,
+      immutable: true,
+    },
     creatorEmail: {
       type: String,
       required: true,
@@ -98,6 +106,12 @@ const contributionSchema = new Schema<IContribution>(
         validator: isPositiveSafeInteger,
         message: "Contribution amount must be a positive safe integer",
       },
+    },
+    message: {
+      type: String,
+      trim: true,
+      maxlength: 1_000,
+      immutable: true,
     },
     status: {
       type: String,

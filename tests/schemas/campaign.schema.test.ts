@@ -71,4 +71,28 @@ describe("campaign validation", () => {
     assert.equal(query.limit, 24);
     assert.equal(query.sortBy, "amountRaised");
   });
+
+  it("accepts exploration ranges and progress sorting", () => {
+    const query = campaignListQuerySchema.parse({
+      deadlineBefore: new Date(Date.now() + 604_800_000).toISOString(),
+      fundingGoalMin: "1000",
+      fundingGoalMax: "5000",
+      sortBy: "progress",
+    });
+
+    assert.ok(query.deadlineBefore instanceof Date);
+    assert.equal(query.fundingGoalMin, 1000);
+    assert.equal(query.fundingGoalMax, 5000);
+    assert.equal(query.sortBy, "progress");
+  });
+
+  it("rejects an inverted funding-goal range", () => {
+    assert.equal(
+      campaignListQuerySchema.safeParse({
+        fundingGoalMin: "5000",
+        fundingGoalMax: "1000",
+      }).success,
+      false,
+    );
+  });
 });

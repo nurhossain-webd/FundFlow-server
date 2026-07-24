@@ -14,9 +14,14 @@ describe("contribution validation", () => {
     const result = createContributionSchema.parse({
       campaignId: "507f1f77bcf86cd799439011",
       amount: 75,
+      message: "I hope this project reaches every classroom.",
     });
 
     assert.equal(result.amount, 75);
+    assert.equal(
+      result.message,
+      "I hope this project reaches every classroom.",
+    );
   });
 
   it("rejects client-controlled status and supporter identity", () => {
@@ -65,8 +70,9 @@ describe("contribution validation", () => {
     const query = contributionListQuerySchema.parse({
       page: "2",
       limit: "25",
+      status: "approved",
     });
-    assert.deepEqual(query, { page: 2, limit: 25 });
+    assert.deepEqual(query, { page: 2, limit: 25, status: "approved" });
   });
 
   it("requires reusable-request protection and a meaningful rejection reason", () => {

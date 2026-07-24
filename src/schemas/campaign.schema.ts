@@ -63,17 +63,39 @@ export const campaignListQuerySchema = z
   .object({
     search: z.string().trim().max(100).optional(),
     category: z.string().trim().min(2).max(60).optional(),
+    deadlineBefore: z.coerce.date().optional(),
+    fundingGoalMin: z.coerce.number().int().positive().safe().optional(),
+    fundingGoalMax: z.coerce.number().int().positive().safe().optional(),
     status: z
       .enum(["pending", "approved", "rejected", "suspended"])
       .optional(),
     sortBy: z
-      .enum(["createdAt", "amountRaised", "deadline", "fundingGoal"])
+      .enum([
+        "createdAt",
+        "amountRaised",
+        "deadline",
+        "fundingGoal",
+        "progress",
+      ])
       .default("createdAt"),
     sortOrder: z.enum(["asc", "desc"]).default("desc"),
     page: optionalIntegerQuery(1, 10_000),
     limit: optionalIntegerQuery(12, 50),
   })
-  .strict();
+  .strict()
+  .superRefine((query, context) => {
+    if (
+      query.fundingGoalMin !== undefined &&
+      query.fundingGoalMax !== undefined &&
+      query.fundingGoalMin > query.fundingGoalMax
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["fundingGoalMin"],
+        message: "Minimum funding goal cannot exceed maximum funding goal",
+      });
+    }
+  });
 
 export const rejectCampaignSchema = z
   .object({

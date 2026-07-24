@@ -19,6 +19,7 @@ export const createContributionSchema = z
       .string()
       .regex(objectIdPattern, "Campaign ID must be a valid MongoDB ObjectId"),
     amount: z.number().int().positive().safe(),
+    message: z.string().trim().min(2).max(1_000).optional(),
   })
   .strict();
 
@@ -42,6 +43,9 @@ export const contributionListQuerySchema = z
   .object({
     page: optionalIntegerQuery(1, 10_000),
     limit: optionalIntegerQuery(12, 50),
+    status: z
+      .enum(["pending", "approved", "rejected", "refunded"])
+      .optional(),
   })
   .strict();
 

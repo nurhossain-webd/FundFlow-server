@@ -52,7 +52,8 @@ const assertMatchingIdempotentContribution = (
 ) => {
   if (
     contribution.campaignId.toString() !== input.campaignId ||
-    contribution.amount !== input.amount
+    contribution.amount !== input.amount ||
+    (contribution.message ?? undefined) !== input.message
   ) {
     throw new AppError(
       409,
@@ -153,8 +154,10 @@ export const createContribution = async (
             supporterName: supporter.displayName,
             supporterEmail: supporter.email,
             creatorId: creator._id,
+            creatorName: creator.displayName,
             creatorEmail: creator.email,
             amount: input.amount,
+            ...(input.message ? { message: input.message } : {}),
             status: "pending",
             idempotencyKey,
           },
@@ -213,6 +216,7 @@ export const getSupporterContributions = (
   getPaginatedContributions(
     {
       supporterId: new mongoose.Types.ObjectId(supporterProfileId),
+      ...(query.status ? { status: query.status } : {}),
     },
     query,
   );

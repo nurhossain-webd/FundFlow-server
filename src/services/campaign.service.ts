@@ -34,8 +34,6 @@ const createSearchFilter = (
   return {
     $or: [
       { title: expression },
-      { story: expression },
-      { category: expression },
       { creatorName: expression },
     ],
   };
@@ -53,33 +51,71 @@ const createCategoryFilter = (
   };
 };
 
+const createRangeFilter = (
+  query: CampaignListQuery,
+): mongoose.QueryFilter<ICampaign> | undefined => {
+  const rangeFilter: mongoose.QueryFilter<ICampaign> = {};
+
+  if (query.deadlineBefore) {
+    rangeFilter.deadline = { $lte: query.deadlineBefore };
+  }
+
+  if (
+    query.fundingGoalMin !== undefined ||
+    query.fundingGoalMax !== undefined
+  ) {
+    rangeFilter.fundingGoal = {
+      ...(query.fundingGoalMin !== undefined
+        ? { $gte: query.fundingGoalMin }
+        : {}),
+      ...(query.fundingGoalMax !== undefined
+        ? { $lte: query.fundingGoalMax }
+        : {}),
+    };
+  }
+
+  return Object.keys(rangeFilter).length > 0 ? rangeFilter : undefined;
+};
+
 const getPaginatedCampaigns = async (
   baseFilter: mongoose.QueryFilter<ICampaign>,
   query: CampaignListQuery,
 ) => {
   const searchFilter = createSearchFilter(query.search);
   const categoryFilter = createCategoryFilter(query.category);
+  const rangeFilter = createRangeFilter(query);
   const filter: mongoose.QueryFilter<ICampaign> = {
     $and: [
       baseFilter,
       ...(searchFilter ? [searchFilter] : []),
       ...(categoryFilter ? [categoryFilter] : []),
+      ...(rangeFilter ? [rangeFilter] : []),
     ],
   };
   const skip = (query.page - 1) * query.limit;
   const direction = query.sortOrder === "asc" ? 1 : -1;
-  const sort: Record<string, 1 | -1> = {
-    [query.sortBy]: direction,
-    _id: -1,
-  };
-
   const [campaigns, total] = await Promise.all([
-    CampaignModel.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(query.limit)
-      .lean()
-      .exec(),
+    query.sortBy === "progress"
+      ? CampaignModel.aggregate<ICampaign>([
+          { $match: filter },
+          {
+            $addFields: {
+              fundingProgress: {
+                $divide: ["$amountRaised", "$fundingGoal"],
+              },
+            },
+          },
+          { $sort: { fundingProgress: direction, _id: -1 } },
+          { $skip: skip },
+          { $limit: query.limit },
+          { $unset: "fundingProgress" },
+        ]).exec()
+      : CampaignModel.find(filter)
+          .sort({ [query.sortBy]: direction, _id: -1 })
+          .skip(skip)
+          .limit(query.limit)
+          .lean()
+          .exec(),
     CampaignModel.countDocuments(filter).exec(),
   ]);
 
