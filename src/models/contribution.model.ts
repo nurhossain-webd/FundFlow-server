@@ -140,6 +140,8 @@ contributionSchema.index(
   { unique: true },
 );
 contributionSchema.index({ campaignId: 1, status: 1, createdAt: -1 });
+contributionSchema.index({ supporterId: 1, status: 1, createdAt: -1 });
+contributionSchema.index({ creatorId: 1, status: 1, createdAt: -1 });
 contributionSchema.index({ supporterEmail: 1, createdAt: -1 });
 contributionSchema.index({ creatorEmail: 1, status: 1, createdAt: -1 });
 contributionSchema.index({ status: 1, createdAt: -1 });

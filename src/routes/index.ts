@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { campaignRouter } from "./campaign.routes.js";
+import { contributionRouter } from "./contribution.routes.js";
 import { healthRouter } from "./health.routes.js";
 import { onboardingRouter } from "./onboarding.routes.js";
 import { publicPlatformRouter } from "./public-platform.routes.js";
@@ -9,5 +10,6 @@ export const router = Router();
 
 router.use("/health", healthRouter);
 router.use("/campaigns", campaignRouter);
+router.use("/contributions", contributionRouter);
 router.use("/onboarding", onboardingRouter);
 router.use("/public", publicPlatformRouter);
