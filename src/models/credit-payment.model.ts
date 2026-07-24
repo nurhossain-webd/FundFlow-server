@@ -18,6 +18,7 @@ export const CREDIT_PAYMENT_STATUSES = [
 export type CreditPaymentStatus = (typeof CREDIT_PAYMENT_STATUSES)[number];
 
 export interface ICreditPayment {
+  packageId: string;
   supporterId: mongoose.Types.ObjectId;
   supporterAuthUserId: string;
   supporterEmail: string;
@@ -31,12 +32,20 @@ export interface ICreditPayment {
   completedAt?: Date;
   failureReason?: string;
   refundedAt?: Date;
+  processedStripeEventId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const creditPaymentSchema = new Schema<ICreditPayment>(
   {
+    packageId: {
+      type: String,
+      required: true,
+      trim: true,
+      immutable: true,
+      maxlength: 50,
+    },
     supporterId: {
       type: Schema.Types.ObjectId,
       ref: "UserProfile",
@@ -106,7 +115,6 @@ const creditPaymentSchema = new Schema<ICreditPayment>(
     stripePaymentIntentId: {
       type: String,
       trim: true,
-      immutable: true,
     },
     completedAt: Date,
     failureReason: {
@@ -115,6 +123,11 @@ const creditPaymentSchema = new Schema<ICreditPayment>(
       maxlength: 500,
     },
     refundedAt: Date,
+    processedStripeEventId: {
+      type: String,
+      trim: true,
+      maxlength: 255,
+    },
   },
   {
     timestamps: true,
@@ -136,6 +149,10 @@ creditPaymentSchema.index(
 );
 creditPaymentSchema.index({ supporterEmail: 1, createdAt: -1 });
 creditPaymentSchema.index({ status: 1, createdAt: -1 });
+creditPaymentSchema.index(
+  { processedStripeEventId: 1 },
+  { unique: true, sparse: true },
+);
 
 export const CreditPaymentModel =
   (models.CreditPayment as Model<ICreditPayment> | undefined) ??
