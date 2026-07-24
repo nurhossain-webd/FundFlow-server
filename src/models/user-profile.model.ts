@@ -20,6 +20,7 @@ export interface IUserProfile {
   role: UserRole;
   credits: number;
   raisedCredits: number;
+  reservedRaisedCredits: number;
   isSuspended: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -74,6 +75,15 @@ const userProfileSchema = new Schema<IUserProfile>(
       validate: {
         validator: isNonNegativeSafeInteger,
         message: "Raised credits must be a non-negative safe integer",
+      },
+    },
+    reservedRaisedCredits: {
+      type: Number,
+      required: true,
+      default: 0,
+      validate: {
+        validator: isNonNegativeSafeInteger,
+        message: "Reserved raised credits must be a non-negative safe integer",
       },
     },
     isSuspended: {

@@ -18,6 +18,17 @@ export const WITHDRAWAL_STATUSES = [
 
 export type WithdrawalStatus = (typeof WITHDRAWAL_STATUSES)[number];
 
+export const WITHDRAWAL_PAYMENT_SYSTEMS = [
+  "bank_transfer",
+  "paypal",
+  "wise",
+  "payoneer",
+  "mobile_banking",
+] as const;
+
+export type WithdrawalPaymentSystem =
+  (typeof WITHDRAWAL_PAYMENT_SYSTEMS)[number];
+
 export interface IWithdrawal {
   creatorId: mongoose.Types.ObjectId;
   creatorAuthUserId: string;
@@ -26,6 +37,9 @@ export interface IWithdrawal {
   requestedCredits: number;
   amountInCents: number;
   creditsPerDollar: number;
+  paymentSystem: WithdrawalPaymentSystem;
+  accountNumber: string;
+  accountNumberLast4: string;
   status: WithdrawalStatus;
   idempotencyKey: string;
   reviewedByAuthUserId?: string;
@@ -96,6 +110,29 @@ const withdrawalSchema = new Schema<IWithdrawal>(
         message: "Credits per dollar must be a positive safe integer",
       },
     },
+    paymentSystem: {
+      type: String,
+      enum: WITHDRAWAL_PAYMENT_SYSTEMS,
+      required: true,
+      immutable: true,
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 4,
+      maxlength: 120,
+      immutable: true,
+      select: false,
+    },
+    accountNumberLast4: {
+      type: String,
+      required: true,
+      minlength: 4,
+      maxlength: 4,
+      immutable: true,
+      select: false,
+    },
     status: {
       type: String,
       enum: WITHDRAWAL_STATUSES,
@@ -141,6 +178,7 @@ withdrawalSchema.index(
   { unique: true },
 );
 withdrawalSchema.index({ creatorEmail: 1, createdAt: -1 });
+withdrawalSchema.index({ creatorId: 1, createdAt: -1 });
 withdrawalSchema.index({ status: 1, createdAt: -1 });
 withdrawalSchema.index({ payoutReference: 1 }, { unique: true, sparse: true });
 

@@ -42,7 +42,9 @@ export {
 } from "./user-profile.model.js";
 export {
   WithdrawalModel,
+  WITHDRAWAL_PAYMENT_SYSTEMS,
   WITHDRAWAL_STATUSES,
   type IWithdrawal,
+  type WithdrawalPaymentSystem,
   type WithdrawalStatus,
 } from "./withdrawal.model.js";
