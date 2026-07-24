@@ -99,7 +99,7 @@ export const campaignListQuerySchema = z
 
 export const rejectCampaignSchema = z
   .object({
-    reason: z.string().trim().min(5).max(500),
+    reason: z.string().trim().min(5).max(500).optional(),
   })
   .strict();
 

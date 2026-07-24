@@ -227,9 +227,46 @@ export const getCreatorWithdrawalHistory = (
     {
       creatorId: new mongoose.Types.ObjectId(creator.profileId),
       creatorAuthUserId: creator.authUserId,
+      ...(query.status ? { status: query.status } : {}),
     },
     query,
   );
+
+export const getCreatorWithdrawalSummary = async (creator: RequestUser) => {
+  const profile = await UserProfileModel.findOne({
+    _id: creator.profileId,
+    authUserId: creator.authUserId,
+    role: "creator",
+  })
+    .select({ raisedCredits: 1, reservedRaisedCredits: 1 })
+    .lean()
+    .exec();
+
+  if (!profile) {
+    throw new AppError(404, "Creator profile not found");
+  }
+
+  const reservedRaisedCredits = profile.reservedRaisedCredits ?? 0;
+  const withdrawableCredits = Math.max(
+    0,
+    profile.raisedCredits - reservedRaisedCredits,
+  );
+  const equivalentAmountInCents =
+    (withdrawableCredits * CENTS_PER_DOLLAR) / CREDITS_PER_DOLLAR;
+
+  if (!Number.isSafeInteger(equivalentAmountInCents)) {
+    throw new AppError(409, "Withdrawable credit value is invalid");
+  }
+
+  return {
+    currentRaisedCredits: profile.raisedCredits,
+    reservedRaisedCredits,
+    withdrawableCredits,
+    equivalentAmountInCents,
+    minimumWithdrawalCredits: 200,
+    creditsPerDollar: CREDITS_PER_DOLLAR,
+  };
+};
 
 export const getPendingWithdrawalRequests = (query: WithdrawalListQuery) =>
   getPaginatedWithdrawals({ status: "pending" }, query);

@@ -19,11 +19,10 @@ export const WITHDRAWAL_STATUSES = [
 export type WithdrawalStatus = (typeof WITHDRAWAL_STATUSES)[number];
 
 export const WITHDRAWAL_PAYMENT_SYSTEMS = [
-  "bank_transfer",
-  "paypal",
-  "wise",
-  "payoneer",
-  "mobile_banking",
+  "stripe",
+  "bkash",
+  "rocket",
+  "nagad",
 ] as const;
 
 export type WithdrawalPaymentSystem =

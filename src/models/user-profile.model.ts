@@ -22,6 +22,9 @@ export interface IUserProfile {
   raisedCredits: number;
   reservedRaisedCredits: number;
   isSuspended: boolean;
+  isDeleted: boolean;
+  deletedAt?: Date;
+  deletedByAuthUserId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,7 +60,6 @@ const userProfileSchema = new Schema<IUserProfile>(
       type: String,
       enum: USER_ROLES,
       required: true,
-      immutable: true,
     },
     credits: {
       type: Number,
@@ -91,6 +93,16 @@ const userProfileSchema = new Schema<IUserProfile>(
       required: true,
       default: false,
     },
+    isDeleted: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    deletedAt: Date,
+    deletedByAuthUserId: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -101,6 +113,7 @@ const userProfileSchema = new Schema<IUserProfile>(
 userProfileSchema.index({ authUserId: 1 }, { unique: true });
 userProfileSchema.index({ email: 1 }, { unique: true });
 userProfileSchema.index({ role: 1, isSuspended: 1 });
+userProfileSchema.index({ isDeleted: 1, role: 1, createdAt: -1 });
 userProfileSchema.index({ createdAt: -1 });
 
 export const UserProfileModel =

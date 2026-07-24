@@ -13,7 +13,7 @@ describe("withdrawal validation", () => {
     assert.equal(
       createWithdrawalSchema.safeParse({
         credits: 200,
-        paymentSystem: "bank_transfer",
+        paymentSystem: "stripe",
         accountNumber: "ACCT-8291",
       }).success,
       true,
@@ -26,7 +26,7 @@ describe("withdrawal validation", () => {
         credits: 199,
         amountInCents: 995,
         status: "approved",
-        paymentSystem: "paypal",
+        paymentSystem: "bkash",
         accountNumber: "creator@example.com",
       }).success,
       false,
@@ -49,6 +49,14 @@ describe("withdrawal validation", () => {
       page: 1,
       limit: 10,
     });
+    assert.deepEqual(
+      withdrawalListQuerySchema.parse({
+        page: "2",
+        limit: "20",
+        status: "approved",
+      }),
+      { page: 2, limit: 20, status: "approved" },
+    );
     assert.equal(
       withdrawalIdParamsSchema.safeParse({
         withdrawalId: "507f1f77bcf86cd799439011",
@@ -62,6 +70,11 @@ describe("withdrawal validation", () => {
     );
     assert.equal(
       withdrawalListQuerySchema.safeParse({ page: 0, limit: 51 }).success,
+      false,
+    );
+    assert.equal(
+      withdrawalListQuerySchema.safeParse({ status: "paid_by_client" })
+        .success,
       false,
     );
   });

@@ -80,6 +80,10 @@ export const requireUserProfile: RequestHandler = asyncHandler(
       throw new AppError(403, "Platform onboarding required");
     }
 
+    if (profile.isDeleted) {
+      throw new AppError(403, "Account has been removed");
+    }
+
     if (profile.isSuspended) {
       throw new AppError(403, "Account is suspended");
     }

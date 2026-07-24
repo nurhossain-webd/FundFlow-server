@@ -315,7 +315,7 @@ const reviewCampaign = async (
 export const approveCampaign = (campaignId: string) =>
   reviewCampaign(campaignId, "approved");
 
-export const rejectCampaign = (campaignId: string, reason: string) =>
+export const rejectCampaign = (campaignId: string, reason?: string) =>
   reviewCampaign(campaignId, "rejected", reason);
 
 interface DeleteCampaignOptions {

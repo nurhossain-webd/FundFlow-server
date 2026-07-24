@@ -71,6 +71,7 @@ export const getAdminDashboardStatistics = async () => {
     withdrawalAnalytics,
   ] = await Promise.all([
     UserProfileModel.aggregate<UserAnalytics>([
+      { $match: { isDeleted: { $ne: true } } },
       {
         $facet: {
           roleDistribution: [

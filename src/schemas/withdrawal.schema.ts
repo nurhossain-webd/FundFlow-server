@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-import { WITHDRAWAL_PAYMENT_SYSTEMS } from "../models/withdrawal.model.js";
+import {
+  WITHDRAWAL_PAYMENT_SYSTEMS,
+  WITHDRAWAL_STATUSES,
+} from "../models/withdrawal.model.js";
 
 const objectIdPattern = /^[a-f\d]{24}$/i;
 
@@ -40,6 +43,7 @@ export const withdrawalListQuerySchema = z
   .object({
     page: optionalIntegerQuery(1, 10_000),
     limit: optionalIntegerQuery(10, 50),
+    status: z.enum(WITHDRAWAL_STATUSES).optional(),
   })
   .strict();
 

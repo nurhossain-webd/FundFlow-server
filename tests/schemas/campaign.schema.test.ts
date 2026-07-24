@@ -6,6 +6,7 @@ import {
   campaignListQuerySchema,
   createCampaignSchema,
   updateCampaignSchema,
+  rejectCampaignSchema,
 } from "../../src/schemas/campaign.schema.js";
 
 const validCampaign = {
@@ -21,6 +22,18 @@ const validCampaign = {
 };
 
 describe("campaign validation", () => {
+  it("allows an optional, bounded campaign rejection reason", () => {
+    assert.equal(rejectCampaignSchema.safeParse({}).success, true);
+    assert.equal(
+      rejectCampaignSchema.safeParse({ reason: "Funding details unclear" })
+        .success,
+      true,
+    );
+    assert.equal(
+      rejectCampaignSchema.safeParse({ reason: "no" }).success,
+      false,
+    );
+  });
   it("accepts a valid creator campaign and coerces its deadline", () => {
     const result = createCampaignSchema.parse(validCampaign);
 

@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { campaignRouter } from "./campaign.routes.js";
+import { adminUserRouter } from "./admin-user.routes.js";
 import { contributionRouter } from "./contribution.routes.js";
 import { creditPaymentRouter } from "./credit-payment.routes.js";
 import { dashboardRouter } from "./dashboard.routes.js";
@@ -13,6 +14,7 @@ import { withdrawalRouter } from "./withdrawal.routes.js";
 export const router = Router();
 
 router.use("/health", healthRouter);
+router.use("/admin/users", adminUserRouter);
 router.use("/campaigns", campaignRouter);
 router.use("/contributions", contributionRouter);
 router.use("/payments", creditPaymentRouter);

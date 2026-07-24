@@ -10,6 +10,7 @@ import {
   approveWithdrawalRequest,
   createWithdrawalRequest,
   getCreatorWithdrawalHistory,
+  getCreatorWithdrawalSummary,
   getPendingWithdrawalRequests,
 } from "../services/withdrawal.service.js";
 import { AppError } from "../utils/app-error.js";
@@ -20,6 +21,19 @@ const getRequestUser = (request: Request) => {
   }
 
   return request.user;
+};
+
+export const getWithdrawalSummary = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const creator = getRequestUser(request);
+  const summary = await getCreatorWithdrawalSummary(creator);
+
+  response.status(200).json({
+    success: true,
+    data: { summary },
+  });
 };
 
 export const createCreatorWithdrawal = async (

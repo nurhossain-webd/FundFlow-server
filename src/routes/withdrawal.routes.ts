@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   approvePendingWithdrawal,
   createCreatorWithdrawal,
+  getWithdrawalSummary,
   listCreatorWithdrawals,
   listPendingWithdrawals,
 } from "../controllers/withdrawal.controller.js";
@@ -21,6 +22,11 @@ withdrawalRouter.post(
   "/",
   requireCreator,
   asyncHandler(createCreatorWithdrawal),
+);
+withdrawalRouter.get(
+  "/summary",
+  requireCreator,
+  asyncHandler(getWithdrawalSummary),
 );
 withdrawalRouter.get(
   "/mine",
