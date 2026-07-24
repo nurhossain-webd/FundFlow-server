@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  adminReportListQuerySchema,
   campaignReportParamsSchema,
   createCampaignReportSchema,
+  reportIdParamsSchema,
+  resolveReportSchema,
 } from "../../src/schemas/report.schema.js";
 
 describe("campaign report validation", () => {
@@ -40,6 +43,34 @@ describe("campaign report validation", () => {
     );
     assert.equal(
       campaignReportParamsSchema.safeParse({ campaignId: "invalid" }).success,
+      false,
+    );
+  });
+
+  it("validates Admin report filtering, resolution, and report IDs", () => {
+    assert.deepEqual(
+      adminReportListQuerySchema.parse({
+        page: "2",
+        limit: "50",
+        status: "pending",
+      }),
+      { page: 2, limit: 50, status: "pending" },
+    );
+    assert.equal(
+      resolveReportSchema.safeParse({
+        resolutionNote: "Reviewed and no policy violation was confirmed.",
+      }).success,
+      true,
+    );
+    assert.equal(resolveReportSchema.safeParse({}).success, true);
+    assert.equal(
+      reportIdParamsSchema.safeParse({
+        reportId: "507f1f77bcf86cd799439011",
+      }).success,
+      true,
+    );
+    assert.equal(
+      adminReportListQuerySchema.safeParse({ status: "deleted" }).success,
       false,
     );
   });

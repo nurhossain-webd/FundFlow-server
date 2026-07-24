@@ -5,6 +5,7 @@ import {
   type ICampaign,
 } from "../models/campaign.model.js";
 import { ContributionModel } from "../models/contribution.model.js";
+import { ReportModel } from "../models/report.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import type {
   CampaignListQuery,
@@ -468,6 +469,80 @@ export const deleteCampaignWithRefunds = async ({
         },
         { session },
       );
+    }
+
+    const activeReports = await ReportModel.find({
+      targetType: "campaign",
+      targetId: campaign._id,
+      status: { $in: ["pending", "under_review"] },
+    })
+      .session(session)
+      .lean()
+      .exec();
+
+    if (activeReports.length > 0) {
+      await ReportModel.updateMany(
+        { _id: { $in: activeReports.map((report) => report._id) } },
+        {
+          $set: {
+            status: "resolved",
+            reviewedByAuthUserId: actor.authUserId,
+            resolvedAt: new Date(),
+            resolutionNote:
+              reason ?? "Campaign deleted after moderation review",
+          },
+          $unset: { activeDeduplicationKey: 1 },
+        },
+        { session },
+      );
+
+      const reporters = new Map(
+        activeReports.map((report) => [
+          report.reporterId.toString(),
+          {
+            recipientId: report.reporterId,
+            recipientAuthUserId: report.reporterAuthUserId,
+            toEmail: report.reporterEmail,
+          },
+        ]),
+      );
+
+      await createNotifications(
+        Array.from(reporters.values()).map((reporter) => ({
+          ...reporter,
+          type: "report_resolved",
+          title: "Reported campaign removed",
+          message: `${campaign.title} was removed after review.`,
+          relatedEntityType: "campaign",
+          relatedEntityId: campaign._id,
+          actionRoute: "/campaigns",
+        })),
+        session,
+      );
+    }
+
+    if (actor.role === "admin") {
+      const creator = await UserProfileModel.findById(campaign.creatorId)
+        .session(session)
+        .lean()
+        .exec();
+
+      if (creator) {
+        await createNotification(
+          {
+            recipientId: creator._id,
+            recipientAuthUserId: creator.authUserId,
+            toEmail: creator.email,
+            type: "campaign_deleted",
+            title: "Campaign removed",
+            message: `${campaign.title} was removed by an administrator. ${reason ?? ""}`.trim(),
+            relatedEntityType: "campaign",
+            relatedEntityId: campaign._id,
+            actionRoute: "/dashboard/creator/campaigns",
+          },
+          session,
+        );
+      }
     }
 
     await CampaignModel.deleteOne({ _id: campaign._id }, { session });

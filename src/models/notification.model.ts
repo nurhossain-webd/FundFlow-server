@@ -8,6 +8,9 @@ export const NOTIFICATION_TYPES = [
   "campaign_submitted",
   "campaign_approved",
   "campaign_rejected",
+  "campaign_deleted",
+  "campaign_reported",
+  "campaign_suspended",
   "contribution_received",
   "contribution_approved",
   "contribution_rejected",
@@ -20,6 +23,7 @@ export const NOTIFICATION_TYPES = [
   "withdrawal_completed",
   "account_suspended",
   "system",
+  "report_resolved",
 ] as const;
 
 export const NOTIFICATION_ENTITY_TYPES = [
@@ -28,6 +32,7 @@ export const NOTIFICATION_ENTITY_TYPES = [
   "creditPayment",
   "withdrawal",
   "userProfile",
+  "report",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

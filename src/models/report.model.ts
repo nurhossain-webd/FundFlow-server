@@ -33,9 +33,16 @@ export type ReportStatus = (typeof REPORT_STATUSES)[number];
 export interface IReport {
   reporterId: mongoose.Types.ObjectId;
   reporterAuthUserId: string;
+  reporterName: string;
   reporterEmail: string;
   targetType: ReportTargetType;
   targetId: mongoose.Types.ObjectId;
+  campaignTitle: string;
+  creatorId: mongoose.Types.ObjectId;
+  creatorAuthUserId: string;
+  creatorName: string;
+  creatorEmail: string;
+  activeDeduplicationKey?: string;
   reason: ReportReason;
   details: string;
   status: ReportStatus;
@@ -61,6 +68,13 @@ const reportSchema = new Schema<IReport>(
       trim: true,
       immutable: true,
     },
+    reporterName: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 80,
+      immutable: true,
+    },
     reporterEmail: {
       type: String,
       required: true,
@@ -79,6 +93,45 @@ const reportSchema = new Schema<IReport>(
       type: Schema.Types.ObjectId,
       required: true,
       immutable: true,
+    },
+    campaignTitle: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 120,
+      immutable: true,
+    },
+    creatorId: {
+      type: Schema.Types.ObjectId,
+      ref: "UserProfile",
+      required: true,
+      immutable: true,
+    },
+    creatorAuthUserId: {
+      type: String,
+      required: true,
+      trim: true,
+      immutable: true,
+    },
+    creatorName: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 80,
+      immutable: true,
+    },
+    creatorEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      match: EMAIL_PATTERN,
+      immutable: true,
+    },
+    activeDeduplicationKey: {
+      type: String,
+      trim: true,
+      select: false,
     },
     reason: {
       type: String,
@@ -125,6 +178,10 @@ reportSchema.index({ reporterId: 1, createdAt: -1 });
 reportSchema.index({ reporterEmail: 1, createdAt: -1 });
 reportSchema.index({ targetType: 1, targetId: 1, createdAt: -1 });
 reportSchema.index({ assignedAdminId: 1, status: 1, createdAt: -1 });
+reportSchema.index(
+  { activeDeduplicationKey: 1 },
+  { unique: true, sparse: true },
+);
 
 export const ReportModel =
   (models.Report as Model<IReport> | undefined) ??
