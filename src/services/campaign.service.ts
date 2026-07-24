@@ -5,7 +5,6 @@ import {
   type ICampaign,
 } from "../models/campaign.model.js";
 import { ContributionModel } from "../models/contribution.model.js";
-import { NotificationModel } from "../models/notification.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import type {
   CampaignListQuery,
@@ -18,6 +17,10 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import {
+  createNotification,
+  createNotifications,
+} from "./notification.service.js";
 
 const escapeRegularExpression = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -248,6 +251,9 @@ export const getPendingCampaigns = (
     query,
   );
 
+export const getAdminCampaigns = (query: CampaignListQuery) =>
+  getPaginatedCampaigns({}, query);
+
 const reviewCampaign = async (
   campaignId: string,
   status: "approved" | "rejected",
@@ -283,30 +289,28 @@ const reviewCampaign = async (
     campaign.status = status;
     await campaign.save({ session });
 
-    await NotificationModel.create(
-      [
-        {
-          recipientId: creator._id,
-          recipientAuthUserId: creator.authUserId,
-          type:
-            status === "approved"
-              ? "campaign_approved"
-              : "campaign_rejected",
-          title:
-            status === "approved"
-              ? "Campaign approved"
-              : "Campaign needs revision",
-          message:
-            status === "approved"
-              ? `${campaign.title} is now live and can receive support.`
-              : `${campaign.title} was rejected. ${reason ?? ""}`.trim(),
-          relatedEntityType: "campaign",
-          relatedEntityId: campaign._id,
-          actionPath: `/dashboard/creator/campaigns/${campaign._id.toString()}`,
-          isRead: false,
-        },
-      ],
-      { session },
+    await createNotification(
+      {
+        recipientId: creator._id,
+        recipientAuthUserId: creator.authUserId,
+        toEmail: creator.email,
+        type:
+          status === "approved"
+            ? "campaign_approved"
+            : "campaign_rejected",
+        title:
+          status === "approved"
+            ? "Campaign approved"
+            : "Campaign needs revision",
+        message:
+          status === "approved"
+            ? `${campaign.title} is now live and can receive support.`
+            : `${campaign.title} was rejected. ${reason ?? ""}`.trim(),
+        relatedEntityType: "campaign",
+        relatedEntityId: campaign._id,
+        actionRoute: "/dashboard/creator/campaigns",
+      },
+      session,
     );
 
     return campaign.toObject();
@@ -360,6 +364,7 @@ export const deleteCampaignWithRefunds = async ({
       {
         supporterId: mongoose.Types.ObjectId;
         supporterAuthUserId: string;
+        supporterEmail: string;
         amount: number;
       }
     >();
@@ -383,6 +388,7 @@ export const deleteCampaignWithRefunds = async ({
       supporterRefunds.set(supporterKey, {
         supporterId: contribution.supporterId,
         supporterAuthUserId: contribution.supporterAuthUserId,
+        supporterEmail: contribution.supporterEmail,
         amount: supporterRefundAmount,
       });
       totalRefundedCredits = nextRefundTotal;
@@ -434,16 +440,17 @@ export const deleteCampaignWithRefunds = async ({
         );
       }
 
-      await NotificationModel.insertMany(
+      await createNotifications(
         Array.from(supporterRefunds.values()).map((refund) => ({
           recipientId: refund.supporterId,
           recipientAuthUserId: refund.supporterAuthUserId,
+          toEmail: refund.supporterEmail,
           type: "contribution_refunded",
           title: "Campaign contribution refunded",
           message: `${refund.amount.toLocaleString()} credits were returned because ${campaign.title} was deleted.`,
-          isRead: false,
+          actionRoute: "/dashboard/supporter/contributions",
         })),
-        { session },
+        session,
       );
 
       await ContributionModel.updateMany(

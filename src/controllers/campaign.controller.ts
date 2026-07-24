@@ -14,6 +14,7 @@ import {
   deleteCampaignWithRefunds,
   getApprovedActiveCampaignById,
   getApprovedActiveCampaigns,
+  getAdminCampaigns,
   getCreatorCampaignById,
   getCreatorCampaigns,
   getPendingCampaigns,
@@ -161,6 +162,20 @@ export const listPendingCampaigns = async (
 ): Promise<void> => {
   const query = campaignListQuerySchema.parse(request.query);
   const result = await getPendingCampaigns(query);
+
+  response.status(200).json({
+    success: true,
+    data: result,
+  });
+};
+
+export const listAdminCampaigns = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  getRequestUser(request);
+  const query = campaignListQuerySchema.parse(request.query);
+  const result = await getAdminCampaigns(query);
 
   response.status(200).json({
     success: true,

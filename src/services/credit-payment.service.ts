@@ -9,7 +9,6 @@ import {
 import { env } from "../config/env.js";
 import { getStripeClient } from "../config/stripe.js";
 import { CreditPaymentModel } from "../models/credit-payment.model.js";
-import { NotificationModel } from "../models/notification.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import type { RequestUser } from "../types/auth-user.js";
 import type { PaymentHistoryQuery } from "../schemas/credit-payment.schema.js";
@@ -18,6 +17,7 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import { createNotification } from "./notification.service.js";
 
 export { getPublicCreditPackages };
 
@@ -285,21 +285,19 @@ const completeCheckoutPayment = async (
       throw new AppError(409, "Purchased credits could not be allocated");
     }
 
-    await NotificationModel.create(
-      [
-        {
-          recipientId: payment.supporterId,
-          recipientAuthUserId: payment.supporterAuthUserId,
-          type: "payment_completed",
-          title: "Credit purchase completed",
-          message: `${payment.creditsPurchased.toLocaleString()} FundFlow credits were added to your account.`,
-          relatedEntityType: "creditPayment",
-          relatedEntityId: payment._id,
-          actionPath: "/dashboard/supporter/credits",
-          isRead: false,
-        },
-      ],
-      { session },
+    await createNotification(
+      {
+        recipientId: payment.supporterId,
+        recipientAuthUserId: payment.supporterAuthUserId,
+        toEmail: payment.supporterEmail,
+        type: "payment_completed",
+        title: "Credit purchase completed",
+        message: `${payment.creditsPurchased.toLocaleString()} FundFlow credits were added to your account.`,
+        relatedEntityType: "creditPayment",
+        relatedEntityId: payment._id,
+        actionRoute: "/dashboard/supporter/credits",
+      },
+      session,
     );
 
     return {

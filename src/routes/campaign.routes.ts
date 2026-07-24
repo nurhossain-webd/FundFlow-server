@@ -8,6 +8,7 @@ import {
   getApprovedCampaign,
   getCreatorCampaign,
   listApprovedCampaigns,
+  listAdminCampaigns,
   listCreatorCampaigns,
   listPendingCampaigns,
   listTopFundedCampaigns,
@@ -23,6 +24,12 @@ import { asyncHandler } from "../utils/async-handler.js";
 
 export const campaignRouter = Router();
 
+campaignRouter.get(
+  "/admin",
+  ...requireAuth,
+  requireAdmin,
+  asyncHandler(listAdminCampaigns),
+);
 campaignRouter.get(
   "/admin/pending",
   ...requireAuth,

@@ -1,5 +1,7 @@
 import mongoose, { type Model } from "mongoose";
 
+import { EMAIL_PATTERN } from "./model.utils.js";
+
 const { model, models, Schema } = mongoose;
 
 export const NOTIFICATION_TYPES = [
@@ -35,6 +37,7 @@ export type NotificationEntityType =
 export interface INotification {
   recipientId: mongoose.Types.ObjectId;
   recipientAuthUserId: string;
+  toEmail: string;
   type: NotificationType;
   title: string;
   message: string;
@@ -59,6 +62,14 @@ const notificationSchema = new Schema<INotification>(
       type: String,
       required: true,
       trim: true,
+      immutable: true,
+    },
+    toEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      match: EMAIL_PATTERN,
       immutable: true,
     },
     type: {

@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-import { NotificationModel } from "../models/notification.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import {
   WithdrawalModel,
@@ -16,6 +15,7 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import { createNotification } from "./notification.service.js";
 
 const CREDITS_PER_DOLLAR = 20;
 const CENTS_PER_DOLLAR = 100;
@@ -340,21 +340,19 @@ export const approveWithdrawalRequest = async (
       throw new AppError(409, "Withdrawal request was already processed");
     }
 
-    await NotificationModel.create(
-      [
-        {
-          recipientId: withdrawal.creatorId,
-          recipientAuthUserId: withdrawal.creatorAuthUserId,
-          type: "withdrawal_approved",
-          title: "Withdrawal approved",
-          message: `Your withdrawal of ${withdrawal.requestedCredits.toLocaleString()} raised credits has been approved.`,
-          relatedEntityType: "withdrawal",
-          relatedEntityId: withdrawal._id,
-          actionPath: "/dashboard/creator/withdrawals",
-          isRead: false,
-        },
-      ],
-      { session },
+    await createNotification(
+      {
+        recipientId: withdrawal.creatorId,
+        recipientAuthUserId: withdrawal.creatorAuthUserId,
+        toEmail: withdrawal.creatorEmail,
+        type: "withdrawal_approved",
+        title: "Withdrawal approved",
+        message: `Your withdrawal of ${withdrawal.requestedCredits.toLocaleString()} raised credits has been approved.`,
+        relatedEntityType: "withdrawal",
+        relatedEntityId: withdrawal._id,
+        actionRoute: "/dashboard/creator/withdrawals",
+      },
+      session,
     );
 
     withdrawal.status = "approved";

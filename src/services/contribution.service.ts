@@ -5,7 +5,6 @@ import {
   ContributionModel,
   type IContribution,
 } from "../models/contribution.model.js";
-import { NotificationModel } from "../models/notification.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import type {
   ContributionListQuery,
@@ -17,6 +16,7 @@ import {
   assertActiveTransaction,
   withMongoTransaction,
 } from "../utils/mongo-transaction.js";
+import { createNotification } from "./notification.service.js";
 
 const getPagination = (query: ContributionListQuery, total: number) => ({
   page: query.page,
@@ -169,21 +169,19 @@ export const createContribution = async (
         throw new AppError(500, "Contribution could not be created");
       }
 
-      await NotificationModel.create(
-        [
-          {
-            recipientId: creator._id,
-            recipientAuthUserId: creator.authUserId,
-            type: "contribution_received",
-            title: "New contribution awaiting review",
-            message: `${supporter.displayName} contributed ${input.amount.toLocaleString()} credits to ${campaign.title}.`,
-            relatedEntityType: "contribution",
-            relatedEntityId: contribution._id,
-            actionPath: "/dashboard/creator/contributions",
-            isRead: false,
-          },
-        ],
-        { session },
+      await createNotification(
+        {
+          recipientId: creator._id,
+          recipientAuthUserId: creator.authUserId,
+          toEmail: creator.email,
+          type: "contribution_received",
+          title: "New contribution awaiting review",
+          message: `${supporter.displayName} contributed ${input.amount.toLocaleString()} credits to ${campaign.title}.`,
+          relatedEntityType: "contribution",
+          relatedEntityId: contribution._id,
+          actionRoute: "/dashboard/creator/contributions",
+        },
+        session,
       );
 
       return { contribution: contribution.toObject(), created: true };
@@ -415,21 +413,19 @@ export const approveContribution = async (
       throw new AppError(409, "Creator raised credits could not be updated");
     }
 
-    await NotificationModel.create(
-      [
-        {
-          recipientId: contribution.supporterId,
-          recipientAuthUserId: contribution.supporterAuthUserId,
-          type: "contribution_approved",
-          title: "Contribution approved",
-          message: `Your ${contribution.amount.toLocaleString()} credit contribution to ${contribution.campaignTitle} was approved.`,
-          relatedEntityType: "contribution",
-          relatedEntityId: contribution._id,
-          actionPath: "/dashboard/supporter/contributions",
-          isRead: false,
-        },
-      ],
-      { session },
+    await createNotification(
+      {
+        recipientId: contribution.supporterId,
+        recipientAuthUserId: contribution.supporterAuthUserId,
+        toEmail: contribution.supporterEmail,
+        type: "contribution_approved",
+        title: "Contribution approved",
+        message: `Your ${contribution.amount.toLocaleString()} credit contribution to ${contribution.campaignTitle} was approved.`,
+        relatedEntityType: "contribution",
+        relatedEntityId: contribution._id,
+        actionRoute: "/dashboard/supporter/contributions",
+      },
+      session,
     );
 
     return contribution.toObject();
@@ -491,21 +487,19 @@ export const rejectContribution = async (
       throw new AppError(409, "Supporter credits could not be refunded");
     }
 
-    await NotificationModel.create(
-      [
-        {
-          recipientId: contribution.supporterId,
-          recipientAuthUserId: contribution.supporterAuthUserId,
-          type: "contribution_rejected",
-          title: "Contribution rejected and refunded",
-          message: `Your ${contribution.amount.toLocaleString()} credit contribution to ${contribution.campaignTitle} was rejected and refunded.`,
-          relatedEntityType: "contribution",
-          relatedEntityId: contribution._id,
-          actionPath: "/dashboard/supporter/contributions",
-          isRead: false,
-        },
-      ],
-      { session },
+    await createNotification(
+      {
+        recipientId: contribution.supporterId,
+        recipientAuthUserId: contribution.supporterAuthUserId,
+        toEmail: contribution.supporterEmail,
+        type: "contribution_rejected",
+        title: "Contribution rejected and refunded",
+        message: `Your ${contribution.amount.toLocaleString()} credit contribution to ${contribution.campaignTitle} was rejected and refunded.`,
+        relatedEntityType: "contribution",
+        relatedEntityId: contribution._id,
+        actionRoute: "/dashboard/supporter/contributions",
+      },
+      session,
     );
 
     return contribution.toObject();
