@@ -15,21 +15,27 @@ const environmentSchema = z
           value.startsWith("mongodb://") || value.startsWith("mongodb+srv://"),
         "MONGODB_URI must be a valid MongoDB connection URI",
       ),
+    MONGODB_DB_NAME: z.string().trim().min(1).default("fundflow"),
     CLIENT_URL: z.url("CLIENT_URL must be a valid URL"),
     BETTER_AUTH_URL: z.url("BETTER_AUTH_URL must be a valid URL"),
+    DEMO_SUPPORTER_EMAIL: z
+      .email("DEMO_SUPPORTER_EMAIL must be a valid email")
+      .default("demo.supporter@fundflow.local"),
+    DEMO_ADMIN_EMAIL: z
+      .email("DEMO_ADMIN_EMAIL must be a valid email")
+      .default("demo.admin@fundflow.local"),
     STRIPE_SECRET_KEY: z
       .string()
       .trim()
       .regex(/^sk_/, "STRIPE_SECRET_KEY must be a Stripe secret key")
       .optional(),
-    STRIPE_WEBHOOK_SECRET: z
-      .string()
-      .trim()
-      .regex(
-        /^whsec_/,
-        "STRIPE_WEBHOOK_SECRET must be a Stripe webhook signing secret",
-      )
-      .optional(),
+    STRIPE_WEBHOOK_SECRET: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim().startsWith("whsec_")
+          ? value.trim()
+          : undefined,
+      z.string().optional(),
+    ),
     RATE_LIMIT_WINDOW_MS: z.coerce
       .number()
       .int()
