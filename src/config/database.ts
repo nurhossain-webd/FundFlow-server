@@ -2,23 +2,38 @@ import mongoose from "mongoose";
 
 import { env } from "./env.js";
 
+let databaseConnectionPromise: Promise<void> | undefined;
+
 export const connectToDatabase = async (): Promise<void> => {
-  try {
-    await mongoose.connect(env.MONGODB_URI, {
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  databaseConnectionPromise ??= mongoose
+    .connect(env.MONGODB_URI, {
       dbName: env.MONGODB_DB_NAME,
       serverSelectionTimeoutMS: 10_000,
-    });
-    console.info("MongoDB connected");
-  } catch {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect().catch(() => undefined);
-    }
+    })
+    .then(() => {
+      console.info("MongoDB connected");
+    })
+    .catch(async () => {
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect().catch(() => undefined);
+      }
 
-    throw new Error("Unable to connect to MongoDB");
-  }
+      throw new Error("Unable to connect to MongoDB");
+    })
+    .finally(() => {
+      databaseConnectionPromise = undefined;
+    });
+
+  await databaseConnectionPromise;
 };
 
 export const disconnectFromDatabase = async (): Promise<void> => {
+  databaseConnectionPromise = undefined;
+
   if (mongoose.connection.readyState !== 0) {
     await mongoose.disconnect();
   }
