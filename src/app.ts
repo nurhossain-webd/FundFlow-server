@@ -1,7 +1,7 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express from "express";
-import helmet from "helmet";
+import express, { type RequestHandler } from "express";
+import helmetModule from "helmet";
 
 import { env } from "./config/env.js";
 import { errorHandler } from "./middlewares/error-handler.middleware.js";
@@ -10,6 +10,17 @@ import { apiRateLimiter } from "./middlewares/rate-limit.middleware.js";
 import { requestLogger } from "./middlewares/request-logger.middleware.js";
 import { router } from "./routes/index.js";
 import { stripeWebhookRouter } from "./routes/stripe-webhook.routes.js";
+
+type HelmetFactory = () => RequestHandler;
+
+// Vercel resolves Helmet through its CommonJS declaration while NodeNext uses
+// the ESM default export. Normalize both module shapes.
+const helmet =
+  (
+    helmetModule as unknown as {
+      default?: HelmetFactory;
+    }
+  ).default ?? (helmetModule as unknown as HelmetFactory);
 
 export const app = express();
 
