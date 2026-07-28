@@ -2,7 +2,7 @@ import type { ErrorRequestHandler } from "express";
 import mongoose from "mongoose";
 import { ZodError } from "zod";
 
-import { env } from "../config/env.js";
+import { isProductionEnvironment } from "../config/env.js";
 import { AppError } from "../utils/app-error.js";
 
 interface ErrorResponse {
@@ -49,7 +49,7 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   if (
-    env.NODE_ENV !== "production" &&
+    !isProductionEnvironment &&
     error instanceof Error &&
     error.stack !== undefined
   ) {
@@ -62,7 +62,7 @@ export const errorHandler: ErrorRequestHandler = (
       error instanceof Error
         ? {
             name: error.name,
-            ...(env.NODE_ENV !== "production"
+            ...(!isProductionEnvironment
               ? { message: error.message, stack: error.stack }
               : {}),
           }

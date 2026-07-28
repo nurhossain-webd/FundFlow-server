@@ -40,6 +40,16 @@ app.use(
     maxAge: 600,
   }),
 );
+app.get("/", (_request, response) => {
+  response.status(200).json({
+    success: true,
+    data: {
+      service: "fundflow-api",
+      health: "/api/v1/health",
+      apiBase: "/api/v1",
+    },
+  });
+});
 app.use(
   asyncHandler(async (_request, _response, next) => {
     await connectToDatabase();

@@ -6,6 +6,7 @@ const environmentSchema = z
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    VERCEL: z.literal("1").optional(),
     PORT: z.coerce.number().int().min(1).max(65_535).default(5000),
     MONGODB_URI: z
       .string()
@@ -70,3 +71,6 @@ if (!result.success) {
 }
 
 export const env = Object.freeze(result.data);
+
+export const isProductionEnvironment =
+  env.NODE_ENV === "production" || env.VERCEL === "1";
