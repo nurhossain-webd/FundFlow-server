@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import {
   campaignIdParamsSchema,
+  campaignUpdateSchema,
   campaignListQuerySchema,
   createCampaignSchema,
   deleteCampaignSchema,
@@ -19,6 +20,7 @@ import {
   getCreatorCampaigns,
   getPendingCampaigns,
   getTopFundedActiveCampaigns,
+  postCreatorCampaignUpdate,
   rejectCampaign,
   updateCreatorCampaign,
 } from "../services/campaign.service.js";
@@ -92,6 +94,26 @@ export const updateCampaign = async (
     success: true,
     message: "Campaign updated",
     data: { campaign },
+  });
+};
+
+export const createCampaignUpdate = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const creator = getRequestUser(request);
+  const { campaignId } = campaignIdParamsSchema.parse(request.params);
+  const input = campaignUpdateSchema.parse(request.body);
+  const update = await postCreatorCampaignUpdate(
+    campaignId,
+    creator.profileId,
+    input,
+  );
+
+  response.status(201).json({
+    success: true,
+    message: "Campaign update published",
+    data: { update },
   });
 };
 

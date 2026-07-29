@@ -18,6 +18,13 @@ export const CAMPAIGN_STATUSES = [
 
 export type CampaignStatus = (typeof CAMPAIGN_STATUSES)[number];
 
+export interface ICampaignUpdate {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  message: string;
+  createdAt: Date;
+}
+
 export interface ICampaign {
   title: string;
   story: string;
@@ -32,6 +39,7 @@ export interface ICampaign {
   creatorEmail: string;
   amountRaised: number;
   status: CampaignStatus;
+  updates: ICampaignUpdate[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -127,6 +135,35 @@ const campaignSchema = new Schema<ICampaign>(
       enum: CAMPAIGN_STATUSES,
       required: true,
       default: "pending",
+    },
+    updates: {
+      type: [
+        new Schema<ICampaignUpdate>(
+          {
+            title: {
+              type: String,
+              required: true,
+              trim: true,
+              minlength: 3,
+              maxlength: 120,
+            },
+            message: {
+              type: String,
+              required: true,
+              trim: true,
+              minlength: 10,
+              maxlength: 2_000,
+            },
+            createdAt: {
+              type: Date,
+              required: true,
+              default: Date.now,
+            },
+          },
+          { versionKey: false },
+        ),
+      ],
+      default: [],
     },
   },
   {

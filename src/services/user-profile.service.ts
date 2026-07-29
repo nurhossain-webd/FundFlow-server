@@ -22,8 +22,6 @@ interface ProfileCreationResult {
   created: boolean;
 }
 
-type DemoRole = Extract<UserRole, "supporter" | "admin">;
-
 const findExistingProfile = async (
   authUserId: string,
   session?: ClientSession,
@@ -116,52 +114,5 @@ export const createUserProfileOnce = async (
       profile: existingProfile,
       created: false,
     };
-  }
-};
-
-export const createDemoUserProfileOnce = async (
-  authenticatedUser: AuthenticatedUser,
-  role: DemoRole,
-): Promise<ProfileCreationResult> => {
-  const existingProfile = await findExistingProfile(authenticatedUser.id);
-
-  if (existingProfile) {
-    if (existingProfile.role !== role) {
-      throw new AppError(409, "Demo account role does not match its profile");
-    }
-
-    return { profile: existingProfile, created: false };
-  }
-
-  try {
-    const profile = await UserProfileModel.create({
-      authUserId: authenticatedUser.id,
-      displayName: authenticatedUser.name,
-      email: authenticatedUser.email,
-      ...(authenticatedUser.image ? { photoURL: authenticatedUser.image } : {}),
-      role,
-      credits: role === "supporter" ? INITIAL_CREDITS.supporter : 0,
-      raisedCredits: 0,
-      reservedRaisedCredits: 0,
-      isSuspended: false,
-      isDeleted: false,
-    });
-
-    return { profile: profile.toObject(), created: true };
-  } catch (error) {
-    if (!isDuplicateKeyError(error)) {
-      throw error;
-    }
-
-    const concurrentProfile = await findExistingProfile(authenticatedUser.id);
-
-    if (!concurrentProfile || concurrentProfile.role !== role) {
-      throw new AppError(
-        409,
-        "A platform profile already uses this demo account",
-      );
-    }
-
-    return { profile: concurrentProfile, created: false };
   }
 };

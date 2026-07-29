@@ -4,7 +4,7 @@ import express, { type RequestHandler } from "express";
 import helmetModule from "helmet";
 
 import { connectToDatabase } from "./config/database.js";
-import { env } from "./config/env.js";
+import { allowedClientOrigins } from "./config/env.js";
 import { errorHandler } from "./middlewares/error-handler.middleware.js";
 import { notFound } from "./middlewares/not-found.middleware.js";
 import { apiRateLimiter } from "./middlewares/rate-limit.middleware.js";
@@ -33,7 +33,7 @@ app.use(requestLogger);
 app.use(apiRateLimiter);
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: allowedClientOrigins,
     credentials: false,
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Authorization", "Content-Type", "Idempotency-Key"],

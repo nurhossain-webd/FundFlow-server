@@ -18,13 +18,21 @@ const environmentSchema = z
       ),
     MONGODB_DB_NAME: z.string().trim().min(1).default("fundflow"),
     CLIENT_URL: z.url("CLIENT_URL must be a valid URL"),
+    CLIENT_URLS: z
+      .string()
+      .trim()
+      .optional()
+      .refine(
+        (value) =>
+          value === undefined ||
+          value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .every((item) => z.url().safeParse(item).success),
+        "CLIENT_URLS must be a comma-separated list of valid URLs",
+      ),
     BETTER_AUTH_URL: z.url("BETTER_AUTH_URL must be a valid URL"),
-    DEMO_SUPPORTER_EMAIL: z
-      .email("DEMO_SUPPORTER_EMAIL must be a valid email")
-      .default("demo.supporter@fundflow.local"),
-    DEMO_ADMIN_EMAIL: z
-      .email("DEMO_ADMIN_EMAIL must be a valid email")
-      .default("demo.admin@fundflow.local"),
     STRIPE_SECRET_KEY: z
       .string()
       .trim()
@@ -74,3 +82,21 @@ export const env = Object.freeze(result.data);
 
 export const isProductionEnvironment =
   env.NODE_ENV === "production" || env.VERCEL === "1";
+
+const localClientOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+] as const;
+
+export const allowedClientOrigins = Array.from(
+  new Set(
+    [
+      env.CLIENT_URL,
+      ...(env.CLIENT_URLS?.split(",") ?? []),
+      ...localClientOrigins,
+    ]
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .map((value) => new URL(value).origin),
+  ),
+);

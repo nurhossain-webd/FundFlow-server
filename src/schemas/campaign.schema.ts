@@ -58,6 +58,13 @@ export const updateCampaignSchema = z
     message: "Provide at least one editable campaign field",
   });
 
+export const campaignUpdateSchema = z
+  .object({
+    title: z.string().trim().min(3).max(120),
+    message: z.string().trim().min(10).max(2_000),
+  })
+  .strict();
+
 const optionalIntegerQuery = (defaultValue: number, maximum: number) =>
   z.preprocess(
     (value) => (value === undefined ? defaultValue : value),
@@ -114,4 +121,5 @@ export const deleteCampaignSchema = z
 
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;
+export type CampaignUpdateInput = z.infer<typeof campaignUpdateSchema>;
 export type CampaignListQuery = z.infer<typeof campaignListQuerySchema>;

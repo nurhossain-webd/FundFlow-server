@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   approvePendingCampaign,
+  createCampaignUpdate,
   createCreatorCampaign,
   deleteAdminCampaign,
   deleteCreatorCampaign,
@@ -35,6 +36,12 @@ campaignRouter.get(
   ...requireAuth,
   requireAdmin,
   asyncHandler(listPendingCampaigns),
+);
+campaignRouter.post(
+  "/:campaignId/updates",
+  ...requireAuth,
+  requireCreator,
+  asyncHandler(createCampaignUpdate),
 );
 campaignRouter.patch(
   "/admin/:campaignId/approve",

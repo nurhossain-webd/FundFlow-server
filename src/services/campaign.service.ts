@@ -6,6 +6,7 @@ import { ReportModel } from "../models/report.model.js";
 import { UserProfileModel } from "../models/user-profile.model.js";
 import type {
   CampaignListQuery,
+  CampaignUpdateInput,
   CreateCampaignInput,
   UpdateCampaignInput,
 } from "../schemas/campaign.schema.js";
@@ -232,6 +233,43 @@ export const updateCreatorCampaign = async (
   }
 
   return campaign;
+};
+
+export const postCreatorCampaignUpdate = async (
+  campaignId: string,
+  creatorProfileId: string,
+  input: CampaignUpdateInput,
+) => {
+  const campaign = await CampaignModel.findOneAndUpdate(
+    {
+      _id: campaignId,
+      creatorId: creatorProfileId,
+      status: "approved",
+      deadline: { $gt: new Date() },
+      "updates.49": { $exists: false },
+    },
+    {
+      $push: {
+        updates: {
+          title: input.title,
+          message: input.message,
+          createdAt: new Date(),
+        },
+      },
+    },
+    { returnDocument: "after", runValidators: true },
+  )
+    .lean()
+    .exec();
+
+  if (!campaign) {
+    throw new AppError(
+      409,
+      "Only an active approved campaign can receive up to 50 updates",
+    );
+  }
+
+  return campaign.updates.at(-1);
 };
 
 export const getPendingCampaigns = (query: CampaignListQuery) =>
